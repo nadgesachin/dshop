@@ -4,7 +4,7 @@ import { Search, Filter, Star } from 'lucide-react';
 const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-
+  
   const categories = [
     { id: 'all', name: 'All Products' },
     { id: 'cctv', name: 'CCTV Cameras' },
@@ -13,37 +13,82 @@ const Products = () => {
     { id: 'speaker', name: 'Speakers' },
     { id: 'printer', name: 'Printers' },
   ];
-
+  
   const products = [
     {
       id: 1,
       name: '4K CCTV Camera',
       category: 'cctv',
       price: '₹5,999',
-      image: '/images/cctv.jpg',
+      image: 'https://images.unsplash.com/photo-1618832515494-62f50e7e5ae8',
       rating: 4.9,
-      description: 'High-resolution 4K CCTV camera with night vision',
+      description: 'High-resolution 4K CCTV camera with night vision.',
     },
     {
       id: 2,
       name: 'Gaming CPU',
       category: 'cpu',
       price: '₹25,999',
-      image: '/images/cpu.jpg',
+      image: 'https://images.unsplash.com/photo-1618401471344-22f7730f246b',
       rating: 4.8,
-      description: 'High-performance gaming CPU with RGB lighting',
+      description: 'High-performance gaming CPU with RGB lighting.',
     },
     {
       id: 3,
       name: '27" 4K Monitor',
       category: 'monitor',
       price: '₹12,999',
-      image: '/images/monitor.jpg',
+      image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04',
       rating: 4.7,
-      description: 'Ultra HD monitor with HDR support',
+      description: 'Ultra HD monitor with HDR support.',
     },
-    // Add more products as needed
+    {
+      id: 4,
+      name: 'Bluetooth Speaker',
+      category: 'speaker',
+      price: '₹1,999',
+      image: 'https://images.unsplash.com/photo-1594007654729-407eedc4be65',
+      rating: 4.5,
+      description: 'Portable speaker with rich bass and Bluetooth 5.0.',
+    },
+    {
+      id: 5,
+      name: 'Inkjet Printer',
+      category: 'printer',
+      price: '₹9,499',
+      image: 'https://images.unsplash.com/photo-1580824454447-53c1b2e5d7fc',
+      rating: 4.6,
+      description: 'Fast and cost-effective inkjet printer for home use.',
+    },
+    {
+      id: 6,
+      name: 'Color Laser Printer',
+      category: 'printer',
+      price: '₹15,499',
+      image: 'https://images.unsplash.com/photo-1616009087620-dcbbf9ae0fcd',
+      rating: 4.7,
+      description: 'Professional-quality color laser printer.',
+    },
+    {
+      id: 7,
+      name: 'Desktop CPU Tower',
+      category: 'cpu',
+      price: '₹19,999',
+      image: 'https://images.unsplash.com/photo-1632426341618-410d5dc245d2',
+      rating: 4.6,
+      description: 'Workstation tower with high processing power.',
+    },
+    {
+      id: 8,
+      name: 'Curved Gaming Monitor',
+      category: 'monitor',
+      price: '₹14,499',
+      image: 'https://images.unsplash.com/photo-1587202372775-98973fd7aa13',
+      rating: 4.8,
+      description: 'Curved display for immersive gaming experience.',
+    },
   ];
+  
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());

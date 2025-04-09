@@ -84,16 +84,6 @@ const Navbar = () => {
                   <User className="h-6 w-6" />
                 </Link>
               )}
-              <div className="flex items-center space-x-4">
-                <a href="tel:9737485262" className="flex items-center text-gray-600 hover:text-orange-500">
-                  <Phone className="h-5 w-5 mr-2" />
-                  <span className="hidden md:inline">9737485262</span>
-                </a>
-                <a href="mailto:shivmobile780@gmail.com" className="flex items-center text-gray-600 hover:text-orange-500">
-                  <Mail className="h-5 w-5 mr-2" />
-                  <span className="hidden md:inline">shivmobile780@gmail.com</span>
-                </a>
-              </div>
             </div>
           </div>
 

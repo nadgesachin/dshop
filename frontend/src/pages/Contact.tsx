@@ -50,7 +50,7 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold">Address</h3>
                     <p className="text-gray-600">
-                      KARCHOND khadkipada DNH&DD Silvassa-396230
+                      Karchond khadkipada dnh&dd Silvassa-396230
                     </p>
                   </div>
                 </div>
@@ -86,15 +86,15 @@ const Contact = () => {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-semibold mb-6">Our Location</h2>
               <div className="h-64 bg-gray-200 rounded-lg">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.123456789012!2d73.0192!3d20.2736!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjDCsDE2JzI0LjkiTiA3M8KwMDEnMDkuMSJF!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                ></iframe>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3773.5863812635165!2d73.1578649!3d20.1565369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be74969dac99969%3A0x5135a11763ae36b2!2sCSC%20CENTER%20SHIV%20MOBILE%20DUDHANI!5e0!3m2!1sen!2sin!4v1712669849146!5m2!1sen!2sin"
+                className="w-full h-full rounded-2xl"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+
               </div>
             </div>
           </div>
