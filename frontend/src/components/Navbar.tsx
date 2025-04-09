@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, Phone, Mail } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-
+import logo from '../assets/logo.png'
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -28,12 +28,15 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-                <span className="text-orange-500 font-bold text-xl">DE</span>
-              </div>
-              <span className="text-white font-bold text-xl">Shiv Mobile</span>
-            </Link>
+          <Link to="/" className="flex items-center space-x-2">
+            <img
+              src={logo}
+              alt="Shiv Mobile Logo"
+              className="w-10 h-10 object-contain rounded-full bg-white p-1"
+            />
+            <span className="text-white font-bold text-xl">Shiv Mobile</span>
+          </Link>
+
           </div>
 
           {/* Desktop Navigation */}
