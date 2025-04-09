@@ -3,14 +3,6 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, Quote, MapPin, Phone, Mail, Clock, User, MessageSquare, ShoppingBag, Bell, X } from 'lucide-react';
 import { submitReview, getReviews, Review } from '../services/reviewService';
 
-interface ReviewFormData {
-  name: string;
-  email: string;
-  rating: number;
-  product: string;
-  comment: string;
-  photos: File[];
-}
 
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);

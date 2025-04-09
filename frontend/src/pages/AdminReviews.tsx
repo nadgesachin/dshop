@@ -73,8 +73,8 @@ const AdminReviews: React.FC = () => {
             {reviews.map((review) => (
               <tr key={review.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{review.customerName}</div>
-                  <div className="text-sm text-gray-500">{review.customerEmail}</div>
+                  {/* <div className="text-sm font-medium text-gray-900">{review.customerName}</div> */}
+                  {/* <div className="text-sm text-gray-500">{review.customerEmail}</div> */}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">

@@ -1,60 +1,49 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Star, Upload, Image, Settings } from 'lucide-react';
-import toast from 'react-hot-toast';
+import React from 'react';
+import {Star, Image, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('products');
-  const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [showUploadImageModal, setShowUploadImageModal] = useState(false);
+  // const [activeTab, setActiveTab] = useState('products');
+  // const [showAddProductModal, setShowAddProductModal] = useState(false);
+  // const [showUploadImageModal, setShowUploadImageModal] = useState(false);
 
-  const products = [
-    {
-      id: 1,
-      name: '4K CCTV Camera',
-      category: 'CCTV Cameras',
-      price: '₹5,999',
-      stock: 10,
-    },
-    {
-      id: 2,
-      name: 'Gaming CPU',
-      category: 'Computer CPUs',
-      price: '₹25,999',
-      stock: 5,
-    },
-    // Add more products as needed
-  ];
+  // const products = [
+  //   {
+  //     id: 1,
+  //     name: '4K CCTV Camera',
+  //     category: 'CCTV Cameras',
+  //     price: '₹5,999',
+  //     stock: 10,
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Gaming CPU',
+  //     category: 'Computer CPUs',
+  //     price: '₹25,999',
+  //     stock: 5,
+  //   },
+  //   // Add more products as needed
+  // ];
 
-  const reviews = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      rating: 5,
-      comment: 'Excellent service and quality products.',
-      date: '2024-03-15',
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      rating: 4,
-      comment: 'Great selection of products.',
-      date: '2024-03-10',
-    },
-    // Add more reviews as needed
-  ];
-
-  const handleDeleteProduct = (id: number) => {
-    // Here you would typically make an API call to delete the product
-    toast.success('Product deleted successfully');
-  };
-
-  const handleDeleteReview = (id: number) => {
-    // Here you would typically make an API call to delete the review
-    toast.success('Review deleted successfully');
-  };
+  // const reviews = [
+  //   {
+  //     id: 1,
+  //     name: 'John Doe',
+  //     email: 'john@example.com',
+  //     rating: 5,
+  //     comment: 'Excellent service and quality products.',
+  //     date: '2024-03-15',
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Jane Smith',
+  //     email: 'jane@example.com',
+  //     rating: 4,
+  //     comment: 'Great selection of products.',
+  //     date: '2024-03-10',
+  //   },
+  //   // Add more reviews as needed
+  // ];
 
   const features = [
     {

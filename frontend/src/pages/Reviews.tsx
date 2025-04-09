@@ -30,21 +30,22 @@ const Reviews = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     try {
-      const reviewData = {
-        name,
-        email,
-        rating,
-        product,
-        comment: review,
-        photos
-      };
-
-      console.log('reviewData in Reviews.tsx', reviewData);
-      await submitReview(reviewData);
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('rating', rating.toString());
+      formData.append('product', product);
+      formData.append('comment', review);
+  
+      photos.forEach((photo) => {
+        formData.append('photos', photo); // backend should accept an array of 'photos'
+      });
+  
+      await submitReview(formData);
       toast.success('Review submitted successfully!');
-      
+  
       // Reset form
       setRating(0);
       setReview('');
@@ -52,8 +53,7 @@ const Reviews = () => {
       setName('');
       setProduct('');
       setPhotos([]);
-      
-      // Refresh reviews
+  
       await fetchReviews();
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -61,7 +61,7 @@ const Reviews = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };  
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
