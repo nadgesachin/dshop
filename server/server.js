@@ -24,11 +24,12 @@ if (!fs.existsSync(reviewsDir)) {
 }
 
 // Middleware
+const cors = require('cors');
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://a755-203-110-85-132.ngrok-free.app'],
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
 }));
 
 // Configure Morgan logging
