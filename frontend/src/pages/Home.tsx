@@ -147,12 +147,16 @@ const Home: React.FC = () => {
     setCurrentProductSlide((prev) => (prev - 1 + Math.ceil(products.length / 3)) % Math.ceil(products.length / 3));
   };
 
-  const nextReviewSlide = () => {
-    setCurrentReviewSlide((prev) => (prev + 1) % reviews.length);
-  };
-
   const prevReviewSlide = () => {
-    setCurrentReviewSlide((prev) => (prev - 1 + reviews.length) % reviews.length);
+    setCurrentReviewSlide((prev) =>
+      prev === 0 ? reviews.length - 1 : prev - 1
+    );
+  };
+  
+  const nextReviewSlide = () => {
+    setCurrentReviewSlide((prev) =>
+      prev === reviews.length - 1 ? 0 : prev + 1
+    );
   };
 
   // Fetch reviews on component mount
@@ -430,7 +434,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Customer Reviews Section */}
-      <div className="bg-gray-50 py-16">
+      <div className="bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-extrabold text-gray-900">What Our Customers Say</h2>
@@ -459,13 +463,13 @@ const Home: React.FC = () => {
             </div>
           )}
 
-          <div className="relative overflow-hidden">
-            <div
+          <div className="relative overflow-hidden w-full">
+          <div
               className="flex transition-transform duration-700 ease-in-out"
-              style={{ transform: `translateX(-${currentReviewSlide * 100}%)` }}
+              style={{ width: `${reviews.length * 100}%`, transform: `translateX(-${currentReviewSlide * 100}%)` }}
             >
               {reviews.map((review) => (
-                <div key={review._id} className="w-full flex-shrink-0 px-4">
+                <div key={review._id} className="min-w-full px-4 flex-shrink-0">
                   <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 transform hover:scale-105 transition duration-300">
                     <div className="flex items-center mb-6">
                       <div className="relative h-16 w-16 rounded-full overflow-hidden">
@@ -535,9 +539,9 @@ const Home: React.FC = () => {
       </div>
 
       {/* Get Review Section */}
-      <div className="bg-gradient-to-b from-gray-50 to-white py-20">
+      <div className="bg-gradient-to-b from-gray-50 to-white py-10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-900 mb-3">Share Your Experience</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Help others by sharing your valuable feedback about our products and services.
@@ -981,7 +985,7 @@ const Home: React.FC = () => {
                           id="newsletter-email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                          className="shadow-sm focus:ring-orange-500 py-2 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
                           placeholder="Enter your email"
                           required
                           disabled={isSubmitting}
@@ -1002,7 +1006,7 @@ const Home: React.FC = () => {
               </div>
       )}
 
-<div className="bg-white py-16">
+      <div className="bg-white py-16">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
            <div className="text-center mb-12">
              <h2 className="text-3xl font-extrabold text-gray-900">Share our shop with your friends and family</h2>

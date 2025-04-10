@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, User, MessageSquare, Pencil } from 'lucide-react';
+
 import toast from 'react-hot-toast';
 
 const Contact = () => {
@@ -100,7 +101,7 @@ const Contact = () => {
           </div>
 
           {/* Contact Form */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          {/* <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-semibold mb-6">Send us a Message</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -154,7 +155,83 @@ const Contact = () => {
                 Send Message <Send className="ml-2" />
               </button>
             </form>
+          </div> */}
+
+          <div className="bg-white rounded-2xl shadow-xl p-12 sm:p-10 lg:p-12 max-w-3xl mx-auto">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">Send Us a Message</h2>
+            <p className="text-center text-gray-600 mb-10">
+              We'd love to hear from you! Just drop us a line.
+            </p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+              {/* Name */}
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your Name"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+
+              {/* Subject */}
+              <div className="relative">
+                <Pencil className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  placeholder="Subject"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+
+              {/* Message */}
+              <div className="relative">
+                <MessageSquare className="absolute top-3 left-4 text-gray-400" />
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Your Message"
+                  rows={5}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  required
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="text-center">
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center px-6 py-3 text-white font-medium rounded-lg bg-gradient-to-r from-orange-500 to-purple-500 hover:opacity-90 transition duration-300"
+                >
+                  Send Message <Send className="ml-2 h-5 w-5" />
+                </button>
+              </div>
+            </form>
           </div>
+
         </div>
       </div>
     </div>

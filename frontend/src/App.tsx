@@ -11,8 +11,10 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminReviews from './pages/AdminReviews';
 import ImageUpload from './pages/ImageUpload';
 import { Login } from './pages/Login';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { Signup } from './pages/Signup';
+// import { ProtectedRoute } from './components/ProtectedRoute';
 import './index.css';
+import AdminPromotions from './pages/AdminPromotions';
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -48,7 +50,12 @@ const AppContent: React.FC = () => {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
+          <Route path="/admin/images" element={<ImageUpload />} />
+          <Route path="/admin/promotions" element={<AdminPromotions />} />
+          {/* <Route
             path="/admin"
             element={
               <ProtectedRoute>
@@ -71,7 +78,7 @@ const AppContent: React.FC = () => {
                 <ImageUpload />
               </ProtectedRoute>
             }
-          />
+          /> */}
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
