@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Pencil } from 'lucide-react';
+import {Trash2, Pencil } from 'lucide-react';
 
 const ManagePromotions: React.FC = () => {
   const [campaigns, setCampaigns] = useState<any[]>([

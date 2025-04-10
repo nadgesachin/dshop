@@ -24,7 +24,7 @@ const Home: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  // const [submitSuccess, setSubmitSuccess] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
@@ -182,7 +182,7 @@ const Home: React.FC = () => {
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSubmitSuccess(false);
+    // setSubmitSuccess(false);
 
     try {
       // Create FormData object
@@ -211,7 +211,7 @@ const Home: React.FC = () => {
 
       const newReview = await submitReview(formData);
       setReviews(prevReviews => [newReview, ...prevReviews]);
-      setSubmitSuccess(true);
+      // setSubmitSuccess(true);
       
       // Reset form
       setReviewForm({
@@ -452,13 +452,6 @@ const Home: React.FC = () => {
           {reviewsError && (
             <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg text-center">
               {reviewsError}
-            </div>
-          )}
-
-          {/* Success Message */}
-          {submitSuccess && (
-            <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
-              Thank you for your review! It has been submitted successfully.
             </div>
           )}
 
