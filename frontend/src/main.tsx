@@ -13,9 +13,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <App />
       </BrowserRouter>
       <Toaster
-        position="bottom-right"
+        position="top-right"
         toastOptions={{
-          duration: 5000, // 5 seconds
+          duration: 5000, 
           success: {
             style: {
               background: 'green',

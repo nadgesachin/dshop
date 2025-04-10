@@ -307,7 +307,6 @@ const Home: React.FC = () => {
         </div>
 
         {/* Carousel */}
-        {/* Carousel */}
       <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden">
         <div className="absolute inset-0">
           <div
@@ -485,6 +484,7 @@ const Home: React.FC = () => {
                       </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-semibold text-gray-900">{review.name}</h3>
+                        <p className="text-sm text-gray-500">Product: {review.product}</p> 
                         <div className="flex items-center mt-1">
                           {[...Array(5)].map((_, i) => (
                             <Star
@@ -612,7 +612,7 @@ const Home: React.FC = () => {
                       >
                         <option value="">Select a product</option>
                         {mockProducts.map((product) => (
-                          <option key={product.id} value={product.id}>
+                          <option key={product.id} value={product.name}>
                             {product.name}
                           </option>
                         ))}
