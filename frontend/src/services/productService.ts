@@ -1,7 +1,8 @@
 // src/services/productService.ts
 import axios from 'axios';
+import { config } from '../config';
 
-const API_BASE = '/api/products';
+const API_BASE = config.backendBaseUrl;
 
 const multipartHeaders = {
   headers: {
