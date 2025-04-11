@@ -9,7 +9,6 @@ import Reviews from './pages/Reviews';
 import Contact from './pages/Contact';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminReviews from './pages/AdminReviews';
-import ImageUpload from './pages/ImageUpload';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { ProtectedRoute } from './components/ProtectedRoute';

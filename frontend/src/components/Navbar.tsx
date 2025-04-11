@@ -29,36 +29,35 @@ const Navbar = () => {
 
   return (
     <nav className="bg-gradient-to-r from-orange-400 to-purple-400 shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7.5xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center gap-2">
             <img
               src={logo}
               alt="Shiv Mobile Logo"
-              className="w-10 h-10 object-contain rounded-full bg-white p-1"
+              className="w-10 h-10 rounded-full bg-white p-1 object-contain shadow-sm"
             />
-            <span className="text-white font-bold text-xl">Shiv Mobile</span>
+            <span className="text-white font-bold text-xl tracking-wide">Shiv Mobile</span>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-4 items-center">
+          <div className="hidden md:flex items-center space-x-9 font-semibold text-[16px]">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === item.path
-                    ? 'bg-white text-orange-500'
+                className={`px-4 py-2 rounded-xl transition duration-200 ${location.pathname === item.path
+                    ? 'bg-white text-orange-500 shadow-sm'
                     : 'text-white hover:bg-white hover:text-orange-500'
-                }`}
+                  }`}
               >
                 {item.name}
               </Link>
             ))}
             <Link
               to="/cart"
-              className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
+              className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-full transition"
             >
               <ShoppingCart className="h-6 w-6" />
             </Link>
@@ -66,13 +65,13 @@ const Navbar = () => {
               <>
                 <Link
                   to="/admin"
-                  className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
+                  className="px-4 py-2 rounded-xl text-white hover:bg-white hover:text-orange-500 transition"
                 >
                   Admin Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
+                  className="px-4 py-2 rounded-xl text-white hover:bg-white hover:text-orange-500 transition"
                 >
                   Logout
                 </button>
@@ -80,7 +79,7 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/login"
-                className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
+                className="p-2 rounded-full text-white hover:bg-white hover:text-orange-500 transition"
               >
                 <User className="h-6 w-6" />
               </Link>
@@ -91,7 +90,7 @@ const Navbar = () => {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md focus:outline-none"
+              className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md transition"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -107,17 +106,16 @@ const Navbar = () => {
               key={item.path}
               to={item.path}
               onClick={closeMenu}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                location.pathname === item.path
+              className={`block px-4 py-2 rounded-lg text-base font-medium transition ${location.pathname === item.path
                   ? 'bg-white text-orange-500'
                   : 'text-white hover:bg-white hover:text-orange-500'
-              }`}
+                }`}
             >
               {item.name}
             </Link>
           ))}
 
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex flex-col items-start gap-2 mt-4">
             <Link
               to="/cart"
               onClick={closeMenu}
@@ -131,13 +129,13 @@ const Navbar = () => {
                 <Link
                   to="/admin"
                   onClick={closeMenu}
-                  className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
+                  className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
                 >
                   Admin Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
+                  className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
                 >
                   Logout
                 </button>
@@ -155,6 +153,7 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+
   );
 };
 

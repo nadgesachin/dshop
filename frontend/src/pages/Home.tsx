@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Star, Quote, MapPin, Phone, Mail, Clock, User, MessageSquare, ShoppingBag, Bell, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, MapPin, Phone, Mail, Clock, User, MessageSquare, ShoppingBag, Bell, X } from 'lucide-react';
 import { submitReview, getReviews, Review } from '../services/reviewService';
 import toast from 'react-hot-toast';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentProductSlide, setCurrentProductSlide] = useState(0);
-  const [currentReviewSlide, setCurrentReviewSlide] = useState(0);
+
+  const [selectedReview, setSelectedReview] = useState<any>(null);
+
+  const handleViewMore = (review: any) => setSelectedReview(review);
+  const closeModal = () => setSelectedReview(null);
 
   const [reviewForm, setReviewForm] = useState({
     name: '',
@@ -26,8 +33,6 @@ const Home: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [submitSuccess, setSubmitSuccess] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
-  const [reviewsError, setReviewsError] = useState<string | null>(null);
 
   const categories = [
     {
@@ -147,33 +152,17 @@ const Home: React.FC = () => {
     setCurrentProductSlide((prev) => (prev - 1 + Math.ceil(products.length / 3)) % Math.ceil(products.length / 3));
   };
 
-  const prevReviewSlide = () => {
-    setCurrentReviewSlide((prev) =>
-      prev === 0 ? reviews.length - 1 : prev - 1
-    );
-  };
-  
-  const nextReviewSlide = () => {
-    setCurrentReviewSlide((prev) =>
-      prev === reviews.length - 1 ? 0 : prev + 1
-    );
-  };
-
   // Fetch reviews on component mount
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        setIsLoadingReviews(true);
         const fetchedReviews = await getReviews();
         setReviews(fetchedReviews || []);
-        setReviewsError(null);
       } catch (error) {
         console.error('Error fetching reviews:', error);
         toast.error("Error fetching reviews");
-        setReviewsError('Failed to load reviews. Please try again later.');
         setReviews([]);
       } finally {
-        setIsLoadingReviews(false);
       }
     };
     fetchReviews();
@@ -212,7 +201,7 @@ const Home: React.FC = () => {
       const newReview = await submitReview(formData);
       setReviews(prevReviews => [newReview, ...prevReviews]);
       // setSubmitSuccess(true);
-      
+
       // Reset form
       setReviewForm({
         name: '',
@@ -231,6 +220,18 @@ const Home: React.FC = () => {
     }
   };
 
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 600,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: true,
+    autoplay: true,
+    autoplaySpeed: 5000,
+    pauseOnHover: true,
+  };
+
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -238,10 +239,10 @@ const Home: React.FC = () => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Here you would typically send the email to your backend
       console.log('Newsletter subscription:', email);
-      
+
       // Show success toast
       setToastMessage('Thank you for subscribing to our newsletter!');
       toast.success('Thank you for subscribing to our newsletter!');
@@ -251,7 +252,7 @@ const Home: React.FC = () => {
     } catch (error) {
       // Show error toast
       setToastMessage('Failed to subscribe. Please try again later.');
-      toast.error('Failed to subscribe. Please try again later.');      
+      toast.error('Failed to subscribe. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
@@ -276,12 +277,7 @@ const Home: React.FC = () => {
     const productTimer = setInterval(nextProductSlide, 4000);
     return () => clearInterval(productTimer);
   }, []);
-
-  useEffect(() => {
-    const reviewTimer = setInterval(nextReviewSlide, 8000);
-    return () => clearInterval(reviewTimer);
-  }, []);
-
+  
   return (
     <div className="bg-white ">
       {/* Hero Section with Carousel */}
@@ -307,68 +303,67 @@ const Home: React.FC = () => {
         </div>
 
         {/* Carousel */}
-      <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden">
-        <div className="absolute inset-0">
-          <div
-            className="flex h-full transition-transform duration-500 ease-in-out flex-nowrap"
-            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-          >
-            {categories.map((category) => (
-              <div
-                key={category.name}
-                className="min-w-full flex-shrink-0 h-full"
-              >
-                <div className="relative h-full">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-12 text-white">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
-                      {category.name}
-                    </h2>
-                    <p className="text-sm sm:text-base md:text-lg opacity-90 mb-2">
-                      {category.description}
-                    </p>
-                    <p className="text-sm sm:text-base font-medium">
-                      {category.count}
-                    </p>
+        <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden">
+          <div className="absolute inset-0">
+            <div
+              className="flex h-full transition-transform duration-500 ease-in-out flex-nowrap"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {categories.map((category) => (
+                <div
+                  key={category.name}
+                  className="min-w-full flex-shrink-0 h-full"
+                >
+                  <div className="relative h-full">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-12 text-white">
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+                        {category.name}
+                      </h2>
+                      <p className="text-sm sm:text-base md:text-lg opacity-90 mb-2">
+                        {category.description}
+                      </p>
+                      <p className="text-sm sm:text-base font-medium">
+                        {category.count}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Navigation Buttons */}
-        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-          <button
-            onClick={prevSlide}
-            className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition duration-300"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <div className="flex space-x-2">
-            {categories.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-2 h-2 rounded-full transition duration-300 ${
-                  index === currentSlide ? 'bg-orange-500 w-4' : 'bg-white/50'
-                }`}
-              />
-            ))}
+          {/* Navigation Buttons */}
+          <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
+            <button
+              onClick={prevSlide}
+              className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition duration-300"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <div className="flex space-x-2">
+              {categories.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-2 h-2 rounded-full transition duration-300 ${index === currentSlide ? 'bg-orange-500 w-4' : 'bg-white/50'
+                    }`}
+                />
+              ))}
+            </div>
+            <button
+              onClick={nextSlide}
+              className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition duration-300"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
           </div>
-          <button
-            onClick={nextSlide}
-            className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition duration-300"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
         </div>
-      </div>
       </div>
 
       {/* Featured Products Section */}
@@ -433,101 +428,113 @@ const Home: React.FC = () => {
       </div>
 
       {/* Customer Reviews Section */}
-      <div className="bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900">What Our Customers Say</h2>
-            <p className="mt-4 text-lg text-gray-600">Read reviews from our satisfied customers</p>
+      <div className="bg-gray-50 py-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="text-center mb-14">
+            <h2 className="text-4xl font-extrabold text-gray-900">What Our Customers Say</h2>
+            <p className="mt-4 text-lg text-gray-600">Real feedback from our happy customers</p>
           </div>
 
-          {/* Loading State */}
-          {isLoadingReviews && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
-              <p className="mt-2 text-gray-600">Loading reviews...</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {reviewsError && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg text-center">
-              {reviewsError}
-            </div>
-          )}
-
-          <div className="relative overflow-hidden w-full">
-          <div
-              className="flex transition-transform duration-700 ease-in-out"
-              style={{ width: `${reviews.length * 100}%`, transform: `translateX(-${currentReviewSlide * 100}%)` }}
-            >
-              {reviews.map((review) => (
-                <div key={review._id} className="min-w-full px-4 flex-shrink-0">
-                  <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 transform hover:scale-105 transition duration-300">
-                    <div className="flex items-center mb-6">
-                      <div className="relative h-16 w-16 rounded-full overflow-hidden">
-                        <img
-                          src={review.photos?.[0] || defaultAvatar}
-                          alt={review.name}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = defaultAvatar;
-                          }}
+          <Slider {...settings}>
+            {reviews.map((review) => (
+              <div key={review._id} className="px-2">
+                <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
+                  {/* Top Section */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start space-x-4">
+                      <img
+                        src={review.photos?.[0] || defaultAvatar}
+                        alt={`${review.name} profile`}
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = defaultAvatar;
+                        }}
+                      />
+                      <div>
+                        <h3 className="text-lg font-semibold">{review.name}</h3>
+                        <p className="text-gray-500 text-sm">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                         />
-                      </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-semibold text-gray-900">{review.name}</h3>
-                        <p className="text-sm text-gray-500">Product: {review.product}</p> 
-                        <div className="flex items-center mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                    <div className="relative">
-                      <Quote className="absolute -top-2 -left-2 h-8 w-8 text-gray-200" />
-                      <p className="text-gray-600 text-lg leading-relaxed">{review.comment}</p>
-                    </div>
-                    <div className="mt-6 text-sm text-gray-500">
-                      {new Date(review.createdAt).toLocaleDateString()}
+                  </div>
+
+                  {/* Comment Section */}
+                  <div className="text-gray-600 text-md line-clamp-4">{review.comment}</div>
+
+                  {/* View More Button */}
+                  <div className="pt-3">
+                    <button
+                      onClick={() => handleViewMore(review)}
+                      className="text-sm text-orange-500 hover:underline"
+                    >
+                      View More
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </Slider>
+
+          {/* Modal */}
+          {selectedReview && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white max-w-2xl w-full rounded-xl p-6 relative shadow-2xl">
+                <button
+                  onClick={closeModal}
+                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 shadow">
+                    <img
+                      src={selectedReview.photos?.[0] || defaultAvatar}
+                      alt={selectedReview.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">{selectedReview.name}</h3>
+                    <p className="text-sm text-gray-500">Product: {selectedReview.product}</p>
+                    <div className="flex mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${i < selectedReview.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="flex justify-center mt-8 space-x-4">
-            <button
-              onClick={prevReviewSlide}
-              className="p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-sm hover:shadow-md"
-            >
-              <ChevronLeft className="h-6 w-6 text-gray-600" />
-            </button>
-            <div className="flex space-x-2">
-              {reviews.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentReviewSlide(index)}
-                  className={`w-2 h-2 rounded-full transition duration-300 ${
-                    index === currentReviewSlide ? 'bg-orange-500 w-4' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
+                <div className="text-gray-700 text-base leading-relaxed mb-4">
+                  {selectedReview.comment}
+                </div>
+
+                {selectedReview.photos?.[0] && (
+                  <div className="mt-4">
+                    <img
+                      src={selectedReview.photos[0]}
+                      alt="Review Image"
+                      className="rounded-lg w-full object-cover max-h-[300px]"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-            <button
-              onClick={nextReviewSlide}
-              className="p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-sm hover:shadow-md"
-            >
-              <ChevronRight className="h-6 w-6 text-gray-600" />
-            </button>
-          </div>
+          )}
+
         </div>
       </div>
 
@@ -625,11 +632,10 @@ const Home: React.FC = () => {
                           className="transition-transform hover:scale-110"
                         >
                           <Star
-                            className={`h-8 w-8 ${
-                              star <= reviewForm.rating
-                                ? 'text-yellow-400 fill-current drop-shadow-sm'
-                                : 'text-gray-300'
-                            }`}
+                            className={`h-8 w-8 ${star <= reviewForm.rating
+                              ? 'text-yellow-400 fill-current drop-shadow-sm'
+                              : 'text-gray-300'
+                              }`}
                           />
                         </button>
                       ))}
@@ -661,7 +667,7 @@ const Home: React.FC = () => {
                   {/* File Upload */}
                   <div>
                     <label htmlFor="photos" className="block text-sm font-medium text-gray-700 mb-1">
-                      Upload Photos (Optional)
+                      User Profile Photo (Optional)
                     </label>
                     <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition">
                       <input
@@ -739,17 +745,17 @@ const Home: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Map Section */}
-          <div className="h-full rounded-2xl overflow-hidden shadow-xl">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3773.5863812635165!2d73.1578649!3d20.1565369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be74969dac99969%3A0x5135a11763ae36b2!2sCSC%20CENTER%20SHIV%20MOBILE%20DUDHANI!5e0!3m2!1sen!2sin!4v1712669849146!5m2!1sen!2sin"
-            className="w-full h-full rounded-2xl"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+            <div className="h-full rounded-2xl overflow-hidden shadow-xl">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3773.5863812635165!2d73.1578649!3d20.1565369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be74969dac99969%3A0x5135a11763ae36b2!2sCSC%20CENTER%20SHIV%20MOBILE%20DUDHANI!5e0!3m2!1sen!2sin!4v1712669849146!5m2!1sen!2sin"
+                className="w-full h-full rounded-2xl"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
 
-          </div>
+            </div>
 
             {/* Contact Information */}
             <div className="bg-gray-50 rounded-2xl p-8 shadow-xl">
@@ -834,7 +840,7 @@ const Home: React.FC = () => {
             <div className="inline-block bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <span className="text-white text-sm font-medium">Stay Connected</span>
             </div>
-            
+
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">
               Stay Updated with Our Latest Products
             </h2>
@@ -896,7 +902,7 @@ const Home: React.FC = () => {
       {/* Floating Newsletter Button */}
       <div className="fixed bottom-6 right-6 z-[99999]">
         <button
-          onClick={() => 
+          onClick={() =>
             setShowNewsletterModal(true)
           }
           className="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
@@ -934,151 +940,151 @@ const Home: React.FC = () => {
       )}
 
       {showNewsletterModal && (
-              <div className="fixed inset-0 z-[99999] overflow-y-auto">
-                <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                  <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                    <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-                  </div>
-      
-                  <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
-                    <div className="absolute top-0 right-0 pt-4 pr-4">
-                      <button
-                        type="button"
-                        className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
-                        onClick={() => setShowNewsletterModal(false)}
-                      >
-                        <span className="sr-only">Close</span>
-                        <X className="h-6 w-6" />
-                      </button>
-                    </div>
-      
-                    <div>
-                      <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
-                        <Bell className="h-6 w-6 text-orange-500" />
-                      </div>
-                      <div className="mt-3 text-center sm:mt-5">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">
-                          Subscribe to Our Newsletter
-                        </h3>
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-500">
-                            Stay updated with our latest products and exclusive offers
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <form onSubmit={handleNewsletterSubmit} className="mt-5 sm:mt-6">
-                      <div>
-                        <label htmlFor="newsletter-email" className="sr-only">
-                          Email address
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          id="newsletter-email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="shadow-sm focus:ring-orange-500 py-2 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                          placeholder="Enter your email"
-                          required
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                      <div className="mt-5 sm:mt-6">
-                        <button
-                          type="submit"
-                          className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-500 text-base font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:text-sm transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? 'Subscribing...' : 'Subscribe'}
-                        </button>
-                      </div>
-                    </form>
+        <div className="fixed inset-0 z-[99999] overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
+              <div className="absolute top-0 right-0 pt-4 pr-4">
+                <button
+                  type="button"
+                  className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                  onClick={() => setShowNewsletterModal(false)}
+                >
+                  <span className="sr-only">Close</span>
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div>
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
+                  <Bell className="h-6 w-6 text-orange-500" />
+                </div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Subscribe to Our Newsletter
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Stay updated with our latest products and exclusive offers
+                    </p>
                   </div>
                 </div>
               </div>
+              <form onSubmit={handleNewsletterSubmit} className="mt-5 sm:mt-6">
+                <div>
+                  <label htmlFor="newsletter-email" className="sr-only">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="newsletter-email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="shadow-sm focus:ring-orange-500 py-2 focus:border-orange-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your email"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="mt-5 sm:mt-6">
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-500 text-base font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:text-sm transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="bg-white py-16">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <div className="text-center mb-12">
-             <h2 className="text-3xl font-extrabold text-gray-900">Share our shop with your friends and family</h2>
-             <p className="mt-4 text-lg text-gray-600">Help us grow by sharing our shop details</p>
-           </div>
- 
-           <div className="max-w-3xl mx-auto">
-             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-               {/* Shop Header */}
-               <div className="relative h-48 bg-gradient-to-r from-orange-500 to-orange-600">
-                 <div className="absolute inset-0 bg-black/20"></div>
-                 <div className="absolute inset-0 flex items-center justify-center">
-                   <h3 className="text-3xl font-bold text-white">Shiv Mobile</h3>
-                 </div>
-               </div>
- 
-               {/* Shop Content */}
-               <div className="p-8">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   {/* Left Column */}
-                   <div className="space-y-6">
-                     <div>
-                       <h4 className="text-lg font-semibold text-gray-900 mb-2">About Us</h4>
-                       <p className="text-gray-600">
-                         Your trusted destination for mobile and electronics needs in Silvassa. We offer a wide range of products from top brands at competitive prices.
-                       </p>
-                     </div>
- 
-                     <div>
-                       <h4 className="text-lg font-semibold text-gray-900 mb-2">Contact Info</h4>
-                       <div className="space-y-2">
-                         <a 
-                           href="https://maps.app.goo.gl/B7YkiDgia7Kiqvxk9"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="flex items-center text-gray-600 hover:text-orange-500 transition duration-300 group"
-                         >
-                           <MapPin className="h-5 w-5 text-orange-500 mr-2 group-hover:scale-110 transition duration-300" />
-                           <span className="group-hover:underline">Karchond khadkipada dnh&dd Silvassa-396230</span>
-                         </a>
-                         <p className="flex items-center text-gray-600">
-                           <Phone className="h-5 w-5 text-orange-500 mr-2" />
-                           9737485262
-                         </p>
-                         <p className="flex items-center text-gray-600">
-                           <Mail className="h-5 w-5 text-orange-500 mr-2" />
-                           shivmobile780@gmail.com
-                         </p>
-                       </div>
-                     </div>
-                   </div>
- 
-                   {/* Right Column */}
-                   <div className="space-y-6">
-                     <div>
-                       <h4 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h4>
-                       <div className="space-y-2">
-                         <p className="flex items-center text-gray-600">
-                           <Clock className="h-5 w-5 text-orange-500 mr-2" />
-                           Monday - Saturday: 10:00 AM - 8:00 PM
-                         </p>
-                         <p className="flex items-center text-gray-600">
-                           <Clock className="h-5 w-5 text-orange-500 mr-2" />
-                           Sunday: 11:00 AM - 6:00 PM
-                         </p>
-                       </div>
-                     </div>
- 
-                     <div>
-                       <h4 className="text-lg font-semibold text-gray-900 mb-2">Share on Social Media</h4>
-                       <div className="flex space-x-4">
-                         <button
-                           onClick={() => {
-                             const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
-                             window.open(`https://www.instagram.com/create/story?text=${text}`, '_blank');
-                           }}
-                           className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
-                         >
-                           <svg
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-extrabold text-gray-900">Share our shop with your friends and family</h2>
+            <p className="mt-4 text-lg text-gray-600">Help us grow by sharing our shop details</p>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              {/* Shop Header */}
+              <div className="relative h-48 bg-gradient-to-r from-orange-500 to-orange-600">
+                <div className="absolute inset-0 bg-black/20"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <h3 className="text-3xl font-bold text-white">Shiv Mobile</h3>
+                </div>
+              </div>
+
+              {/* Shop Content */}
+              <div className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left Column */}
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">About Us</h4>
+                      <p className="text-gray-600">
+                        Your trusted destination for mobile and electronics needs in Silvassa. We offer a wide range of products from top brands at competitive prices.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Contact Info</h4>
+                      <div className="space-y-2">
+                        <a
+                          href="https://maps.app.goo.gl/B7YkiDgia7Kiqvxk9"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-gray-600 hover:text-orange-500 transition duration-300 group"
+                        >
+                          <MapPin className="h-5 w-5 text-orange-500 mr-2 group-hover:scale-110 transition duration-300" />
+                          <span className="group-hover:underline">Karchond khadkipada dnh&dd Silvassa-396230</span>
+                        </a>
+                        <p className="flex items-center text-gray-600">
+                          <Phone className="h-5 w-5 text-orange-500 mr-2" />
+                          9737485262
+                        </p>
+                        <p className="flex items-center text-gray-600">
+                          <Mail className="h-5 w-5 text-orange-500 mr-2" />
+                          shivmobile780@gmail.com
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h4>
+                      <div className="space-y-2">
+                        <p className="flex items-center text-gray-600">
+                          <Clock className="h-5 w-5 text-orange-500 mr-2" />
+                          Monday - Saturday: 10:00 AM - 8:00 PM
+                        </p>
+                        <p className="flex items-center text-gray-600">
+                          <Clock className="h-5 w-5 text-orange-500 mr-2" />
+                          Sunday: 11:00 AM - 6:00 PM
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Share on Social Media</h4>
+                      <div className="flex space-x-4">
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
+                            window.open(`https://www.instagram.com/create/story?text=${text}`, '_blank');
+                          }}
+                          className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
+                        >
+                          <svg
                             className="h-6 w-6  transition duration-300"
                             fill="currentColor"
                             viewBox="0 0 24 24"
@@ -1086,52 +1092,52 @@ const Home: React.FC = () => {
                           >
                             <path d="M7.75 2A5.75 5.75 0 002 7.75v8.5A5.75 5.75 0 007.75 22h8.5A5.75 5.75 0 0022 16.25v-8.5A5.75 5.75 0 0016.25 2h-8.5zM4.5 7.75A3.25 3.25 0 017.75 4.5h8.5a3.25 3.25 0 013.25 3.25v8.5a3.25 3.25 0 01-3.25 3.25h-8.5a3.25 3.25 0 01-3.25-3.25v-8.5zm7.5 1.25a4.5 4.5 0 100 9 4.5 4.5 0 000-9zm0 1.5a3 3 0 110 6 3 3 0 010-6zm5.25-3a.75.75 0 100 1.5.75.75 0 000-1.5z" />
                           </svg>
-                         </button>
- 
-                         <button
-                           onClick={() => {
-                             const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
-                             window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-                           }}
-                           className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
-                         >
-                           <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                             <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                           </svg>
-                         </button>
- 
-                         <button
-                           onClick={() => {
-                             const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
-                             window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${text}`, '_blank');
-                           }}
-                           className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
-                         >
-                           <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                           </svg>
-                         </button>
- 
-                         <button
-                           onClick={() => {
-                             const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
-                             window.open(`https://wa.me/?text=${text}`, '_blank');
-                           }}
-                           className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
-                         >
-                           <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                           </svg>
-                         </button>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </div>
-         </div>
-       </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
+                            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+                          }}
+                          className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
+                        >
+                          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                          </svg>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
+                            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${text}`, '_blank');
+                          }}
+                          className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
+                        >
+                          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                          </svg>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const text = encodeURIComponent("Check out Shiv Mobile - Your trusted destination for mobile and electronics needs in Silvassa! 🏪\n\n📍 KARCHOND khadkipada DNH&DD Silvassa-396230\n📞 9737485262\n\n#ShivMobile #ElectronicsStore #Silvassa");
+                            window.open(`https://wa.me/?text=${text}`, '_blank');
+                          }}
+                          className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:shadow-lg transform hover:scale-110 transition duration-300"
+                        >
+                          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
