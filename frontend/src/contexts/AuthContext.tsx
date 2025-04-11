@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
-
+import { config } from '../config';
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<string>;
@@ -22,7 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post(`${config.backendBaseUrl}/auth/login`, {
         email,
         password
       });

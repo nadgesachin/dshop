@@ -12,9 +12,10 @@ import AdminReviews from './pages/AdminReviews';
 import ImageUpload from './pages/ImageUpload';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
-// import { ProtectedRoute } from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import './index.css';
 import AdminPromotions from './pages/AdminPromotions';
+import ManageProducts from './pages/ManageProducts';
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -51,11 +52,12 @@ const AppContent: React.FC = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/reviews" element={<AdminReviews />} />
-          <Route path="/admin/images" element={<ImageUpload />} />
-          <Route path="/admin/promotions" element={<AdminPromotions />} />
-          {/* <Route
+          {/* <Route path="/admin" element={<AdminDashboard />} /> */}
+          {/* <Route path="/admin/reviews" element={<AdminReviews />} /> */}
+          {/* <Route path="/admin/images" element={<ImageUpload />} /> */}
+          {/* <Route path="/admin/promotions" element={<AdminPromotions />} /> */}
+          {/* <Route path="/admin/products" element={<ManageProducts />} /> */}
+          <Route
             path="/admin"
             element={
               <ProtectedRoute>
@@ -72,6 +74,22 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
+            path="/admin/promotions"
+            element={
+              <ProtectedRoute>
+                <AdminPromotions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/products"
+            element={
+              <ProtectedRoute>
+                <ManageProducts />
+              </ProtectedRoute>
+            }
+          />
+          {/* <Route
             path="/admin/images"
             element={
               <ProtectedRoute>

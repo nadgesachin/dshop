@@ -12,12 +12,14 @@ export const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await login(formData.email, formData.password);
+    
+    const { email, password } = formData;
+    const token = await login(email, password);
+    if (token) {
       toast.success('Login successful!');
-      const from = (location.state as any)?.from?.pathname || '/';
+      const from = (location.state as any)?.from?.pathname || '/admin';
       navigate(from);
-    } catch (error) {
+    } else {
       toast.error('Invalid credentials. Please try again.');
     }
   };
@@ -40,11 +42,10 @@ export const Login = () => {
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
-                type="email"
+                type="text"
                 name="email"
                 required
-                placeholder="Email address"
-                autoComplete="email"
+                placeholder="Username"
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -58,7 +59,6 @@ export const Login = () => {
                 name="password"
                 required
                 placeholder="Password"
-                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"

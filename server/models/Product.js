@@ -30,8 +30,7 @@ const productSchema = new mongoose.Schema({
   },
   features: [String],
   specifications: {
-    type: Map,
-    of: String
+    type: String
   },
   createdAt: {
     type: Date,

@@ -1,7 +1,6 @@
 import axios from 'axios';
-
-// Use Vite's import.meta.env for environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'https://a755-203-110-85-132.ngrok-free.app/api';
+import { config } from '../config';
+const API_URL = config.backendBaseUrl;
 
 export interface Review {
   _id: string;

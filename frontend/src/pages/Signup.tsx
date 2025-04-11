@@ -2,13 +2,22 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Calendar, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { signupUser } from '../services/signupService';
+
 
 export const Signup = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    photo: File | null;
+    dob: string;
+    password: string;
+    repassword: string;
+  }>({
     name: '',
     email: '',
-    photo: '',
+    photo: null,
     dob: '',
     password: '',
     repassword: '',
@@ -19,18 +28,32 @@ export const Signup = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
 
-    if (formData.password !== formData.repassword) {
-      toast.error("Passwords don't match!");
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    // Simulate success (replace with real API call)
+  if (formData.password !== formData.repassword) {
+    toast.error("Passwords don't match!");
+    return;
+  }
+
+  try {
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      photo: formData.photo,
+      dob: formData.dob,
+      password: formData.password,
+    };
+    if (formData.photo) payload.photo = formData.photo;
+    await signupUser(payload);
     toast.success('Account created successfully!');
     navigate('/login');
-  };
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
@@ -74,13 +97,18 @@ export const Signup = () => {
             <div className="relative">
               <Image className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
-                type="url"
+                type="file"
                 name="photo"
-                placeholder="Profile Photo URL"
-                value={formData.photo}
-                onChange={handleChange}
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFormData(prev => ({ ...prev, photo: file }));
+                  }
+                }}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
+
             </div>
 
             {/* DOB */}

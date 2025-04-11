@@ -3,131 +3,185 @@ const router = express.Router();
 const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const upload = require('../utils/multer');
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+//----------------- ROUTES ------------------- //
 
-// Configure Multer with Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'dharmesh-electronics/products',
-    allowed_formats: ['jpg', 'jpeg', 'png']
-  }
-});
-
-const upload = multer({ storage: storage });
-
-// Get all products
+// GET all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const products = await Product.find().sort({ createdAt: -1 });
+    res.status(200).json(products);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('GET /products:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch products' });
   }
 });
 
-// Get product by ID
+// GET product by ID
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-    res.json(product);
+    if (!product)
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    res.status(200).json(product);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error(`GET /products/${req.params.id}:`, error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
-// Create new product (Admin only)
-router.post('/', auth, upload.array('images', 5), async (req, res) => {
+// POST create product
+router.post('/', upload.array('images', 5), async (req, res) => {
   try {
     const { name, description, category, price, stock, features, specifications } = req.body;
-    
-    const images = req.files.map(file => ({
-      public_id: file.public_id,
-      url: file.secure_url
-    }));
 
+    // Check required fields
+    if (!name || !description || !category || !price || !stock) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    // Validate category
+    const allowedCategories = ['CCTV Cameras', 'Computer CPUs', 'Monitors and parts', 'Speakers', 'Printers'];
+    if (!allowedCategories.includes(category)) {
+      return res.status(400).json({ success: false, message: `Invalid category. Allowed: ${allowedCategories.join(', ')}` });
+    }
+
+    // Upload images and build image object array
+    const images = [];
+
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const result = await uploadToCloudinary(file.path);
+          images.push({
+            public_id: result.public_id,
+            url: result.secure_url
+          });
+        } catch (error) {
+          console.error('Cloudinary upload error:', error);
+        }
+      }
+    }
+
+    // Parse features and specifications
+    const parsedFeatures = features ? features.split(',').map(f => f.trim()) : [];
+    const parsedSpecifications = specifications ? String(specifications) : '';
+
+    // Create product
     const product = new Product({
       name,
       description,
       category,
-      price,
-      stock,
-      features: JSON.parse(features),
-      specifications: JSON.parse(specifications),
+      price: parseFloat(price),
+      stock: parseInt(stock),
+      features: parsedFeatures,
+      specifications: parsedSpecifications,
       images
     });
 
-    await product.save();
-    res.status(201).json(product);
+    const savedProduct = await product.save();
+    res.status(201).json({ success: true, product: savedProduct });
+
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('POST /products:', error);
+    res.status(500).json({ success: false, message: 'Failed to create product', error: error.message });
   }
 });
 
-// Update product (Admin only)
-router.put('/:id', auth, upload.array('images', 5), async (req, res) => {
+
+router.put('/:id', upload.array('images', 5), async (req, res) => {
   try {
     const { name, description, category, price, stock, features, specifications } = req.body;
-    
+
     const product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Update product fields
-    product.name = name || product.name;
-    product.description = description || product.description;
-    product.category = category || product.category;
-    product.price = price || product.price;
-    product.stock = stock || product.stock;
-    product.features = features ? JSON.parse(features) : product.features;
-    product.specifications = specifications ? JSON.parse(specifications) : product.specifications;
+    // Validate category if provided
+    const allowedCategories = [
+      'CCTV Cameras',
+      'Computer CPUs',
+      'Monitors and parts',
+      'Speakers',
+      'Printers'
+    ];
+    if (category && !allowedCategories.includes(category)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid category. Allowed: ${allowedCategories.join(', ')}`
+      });
+    }
 
-    // Add new images if any
+    // Parse specifications safely
+    let parsedSpecifications = product.specifications;
+    if (specifications) {
+      try {
+        parsedSpecifications = JSON.parse(specifications);
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: 'Specifications must be valid JSON',
+          error: err.message
+        });
+      }
+    }
+
+    // Upload and merge new images if any
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => ({
-        public_id: file.public_id,
-        url: file.secure_url
-      }));
-      product.images = [...product.images, ...newImages];
+      for (const file of req.files) {
+        const result = await uploadToCloudinary(file.path);
+        product.images.push({
+          public_id: result.public_id,
+          url: result.secure_url
+        });
+      }
     }
 
-    await product.save();
-    res.json(product);
+    // Update fields conditionally
+    product.name = name ?? product.name;
+    product.description = description ?? product.description;
+    product.category = category ?? product.category;
+    product.price = price ? parseFloat(price) : product.price;
+    product.stock = stock ? parseInt(stock) : product.stock;
+    product.features = features ? features.split(',').map(f => f.trim()) : product.features;
+    product.specifications = parsedSpecifications;
+
+    const updatedProduct = await product.save();
+
+    res.status(200).json({ success: true, product: updatedProduct });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error(`PUT /products/${req.params.id}:`, error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update product',
+      error: error.message
+    });
   }
 });
 
-// Delete product (Admin only)
+// DELETE product
 router.delete('/:id', auth, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+    if (!product)
+      return res.status(404).json({ success: false, message: 'Product not found' });
+
+    // Remove Cloudinary images
+    for (const img of product.images) {
+      if (img.public_id) {
+        await cloudinary.uploader.destroy(img.public_id);
+      }
     }
 
-    // Delete images from Cloudinary
-    for (const image of product.images) {
-      await cloudinary.uploader.destroy(image.public_id);
-    }
-
-    await product.remove();
-    res.json({ message: 'Product deleted' });
+    await product.deleteOne();
+    res.status(200).json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error(`DELETE /products/${req.params.id}:`, error);
+    res.status(500).json({ success: false, message: 'Failed to delete product', error: error.message });
   }
 });
 
-module.exports = router; 
+module.exports = router;
