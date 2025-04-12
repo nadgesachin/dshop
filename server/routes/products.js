@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const upload = require('../utils/multer');
-const { uploadToCloudinary } = require('../utils/cloudinary');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
 
 //----------------- ROUTES ------------------- //
 
@@ -61,8 +61,9 @@ router.post('/', upload.array('images', 5), async (req, res) => {
           });
         } catch (error) {
           console.error('Cloudinary upload error:', error);
+          return res.status(500).json({ success: false, message: 'Image upload failed', error: error.message });
         }
-      }
+      }  
     }
 
     // Parse features and specifications
@@ -90,7 +91,6 @@ router.post('/', upload.array('images', 5), async (req, res) => {
   }
 });
 
-
 router.put('/:id', upload.array('images', 5), async (req, res) => {
   try {
     const { name, description, category, price, stock, features, specifications } = req.body;
@@ -100,14 +100,8 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Validate category if provided
-    const allowedCategories = [
-      'CCTV Cameras',
-      'Computer CPUs',
-      'Monitors and parts',
-      'Speakers',
-      'Printers'
-    ];
+    // Validate category
+    const allowedCategories = ['CCTV Cameras', 'Computer CPUs', 'Monitors and parts', 'Speakers', 'Printers'];
     if (category && !allowedCategories.includes(category)) {
       return res.status(400).json({
         success: false,
@@ -115,32 +109,31 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
       });
     }
 
-    // Parse specifications safely
-    let parsedSpecifications = product.specifications;
-    if (specifications) {
-      try {
-        parsedSpecifications = JSON.parse(specifications);
-      } catch (err) {
-        return res.status(400).json({
-          success: false,
-          message: 'Specifications must be valid JSON',
-          error: err.message
-        });
-      }
-    }
+    // Parse specifications
+    let parsedSpecifications = specifications ? String(specifications) : '';
 
-    // Upload and merge new images if any
+    // Handle image update
     if (req.files && req.files.length > 0) {
+      // Delete old images
+      for (const image of product.images) {
+        if (image.public_id) {
+          await deleteFromCloudinary(image.public_id);
+        }
+      }
+
+      // Upload new images
+      const newImages = [];
       for (const file of req.files) {
         const result = await uploadToCloudinary(file.path);
-        product.images.push({
+        newImages.push({
           public_id: result.public_id,
           url: result.secure_url
         });
       }
+      product.images = newImages;
     }
 
-    // Update fields conditionally
+    // Update fields
     product.name = name ?? product.name;
     product.description = description ?? product.description;
     product.category = category ?? product.category;
@@ -150,8 +143,8 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
     product.specifications = parsedSpecifications;
 
     const updatedProduct = await product.save();
-
     res.status(200).json({ success: true, product: updatedProduct });
+
   } catch (error) {
     console.error(`PUT /products/${req.params.id}:`, error);
     res.status(500).json({
@@ -163,7 +156,7 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
 });
 
 // DELETE product
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product)
@@ -172,7 +165,7 @@ router.delete('/:id', auth, async (req, res) => {
     // Remove Cloudinary images
     for (const img of product.images) {
       if (img.public_id) {
-        await cloudinary.uploader.destroy(img.public_id);
+        await deleteFromCloudinary(img.public_id);
       }
     }
 

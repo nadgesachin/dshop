@@ -82,7 +82,6 @@ router.post('/', upload.array('photos', 5), async (req, res) => {
       product,
       comment,
       photos: photoUrls,
-      status: 'approved' // Auto-approve reviews
     });
 
     await review.save();

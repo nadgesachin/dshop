@@ -15,6 +15,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import './index.css';
 import AdminPromotions from './pages/AdminPromotions';
 import ManageProducts from './pages/ManageProducts';
+import ManageReviews from './pages/ManageReviews';
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -88,14 +89,14 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          {/* <Route
-            path="/admin/images"
+          <Route
+            path="/admin/reviews"
             element={
               <ProtectedRoute>
-                <ImageUpload />
+                <ManageReviews />
               </ProtectedRoute>
             }
-          /> */}
+          />
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

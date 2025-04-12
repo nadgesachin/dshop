@@ -30,7 +30,7 @@ export interface Product {
 // GET all products
 export const getAllProducts = async (): Promise<Product[]> => {
   try {
-    const { data } = await axios.get(API_BASE);
+    const { data } = await axios.get(`${API_BASE}/products/`);
     return data;
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -41,7 +41,7 @@ export const getAllProducts = async (): Promise<Product[]> => {
 // GET product by ID
 export const getProductById = async (id: string): Promise<Product> => {
   try {
-    const { data } = await axios.get(`${API_BASE}/${id}`);
+    const { data } = await axios.get(`${API_BASE}/products/${id}`);
     return data;
   } catch (error) {
     console.error(`Error fetching product ${id}:`, error);
@@ -52,7 +52,7 @@ export const getProductById = async (id: string): Promise<Product> => {
 // CREATE product
 export const createProduct = async (formData: FormData): Promise<Product> => {
   try {
-    const { data } = await axios.post(API_BASE, formData, multipartHeaders);
+    const { data } = await axios.post(`${API_BASE}/products/`, formData, multipartHeaders);
     return data;
   } catch (error) {
     console.error('Error creating product:', error);
@@ -63,7 +63,7 @@ export const createProduct = async (formData: FormData): Promise<Product> => {
 // UPDATE product
 export const updateProduct = async (id: string, formData: FormData): Promise<Product> => {
   try {
-    const { data } = await axios.put(`${API_BASE}/${id}`, formData, multipartHeaders);
+    const { data } = await axios.put(`${API_BASE}/products/${id}`, formData, multipartHeaders);
     return data;
   } catch (error) {
     console.error(`Error updating product ${id}:`, error);
@@ -74,7 +74,7 @@ export const updateProduct = async (id: string, formData: FormData): Promise<Pro
 // DELETE product
 export const deleteProduct = async (id: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const { data } = await axios.delete(`${API_BASE}/${id}`);
+    const { data } = await axios.delete(`${API_BASE}/products/${id}`);
     return data;
   } catch (error) {
     console.error(`Error deleting product ${id}:`, error);

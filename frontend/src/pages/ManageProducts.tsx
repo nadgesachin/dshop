@@ -18,20 +18,20 @@ export interface Product {
     features: string[];
     specifications: Record<string, string>;
     images: {
-      public_id: string;
-      url: string;
+        public_id: string;
+        url: string;
     }[];
     createdAt?: string;
-  }
+}
 
-  const categories = [
+const categories = [
     'CCTV Cameras',
     'Computer CPUs',
     'Monitors and parts',
     'Speakers',
     'Printers'
-  ];
-  
+];
+
 const initialForm = {
     name: '',
     description: '',
@@ -48,6 +48,9 @@ const ManageProducts = () => {
     const [form, setForm] = useState(initialForm);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [previewImages, setPreviewImages] = useState<string[]>([]);
+    const [existingImages, setExistingImages] = useState<Product['images']>([]);
+
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -65,10 +68,18 @@ const ManageProducts = () => {
         fetchProducts();
     }, []);
 
-    const handleChange = (e: any) => {
-        const { name, value, files } = e.target;
-        if (name === 'images') {
-            setForm(prev => ({ ...prev, images: Array.from(files) }));
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value, files } = e.target as HTMLInputElement;
+
+        if (name === 'images' && files) {
+            const imageFiles = Array.from(files) as File[];
+            setForm(prev => ({
+                ...prev,
+                images: imageFiles,
+            }));
+
+            const previews = imageFiles.map(file => URL.createObjectURL(file));
+            setPreviewImages(previews);
         } else {
             setForm(prev => ({ ...prev, [name]: value }));
         }
@@ -96,6 +107,8 @@ const ManageProducts = () => {
             }
             setForm(initialForm);
             setEditingId(null);
+            setExistingImages([]);
+            setPreviewImages([]);
             fetchProducts();
         } catch {
             toast.error('Failed to save product');
@@ -114,6 +127,8 @@ const ManageProducts = () => {
             specifications: String(product.specifications || {}),
             images: [],
         });
+        setExistingImages(product.images); // <- Store current images
+        setPreviewImages([]);
     };
 
     const handleDelete = async (id: string) => {
@@ -134,98 +149,143 @@ const ManageProducts = () => {
                     <h1 className="text-3xl font-bold text-gray-900">Manage Products</h1>
                     <p className="mt-2 text-lg text-gray-600">Add, update, or delete products easily</p>
                 </div>
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-xl mb-12">
-                        <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
-                            {editingId ? 'Edit Product' : 'Add New Product'}
-                        </h2>
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-xl mb-12">
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+                        {editingId ? 'Edit Product' : 'Add New Product'}
+                    </h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <input
-                                name="name"
-                                value={form.name}
-                                onChange={handleChange}
-                                placeholder="Product Name"
-                                required
-                                className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            />
-                            <select
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input
+                            name="name"
+                            value={form.name}
+                            onChange={handleChange}
+                            placeholder="Product Name"
+                            required
+                            className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <select
                             name="category"
                             value={form.category}
                             onChange={handleChange}
                             required
                             className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            >
+                        >
                             <option value="">Select Category</option>
                             {categories.map((cat) => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
-                            </select>
-
-                            <input
-                                name="price"
-                                type="number"
-                                value={form.price}
-                                onChange={handleChange}
-                                placeholder="Price"
-                                required
-                                className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            />
-                            <input
-                                name="stock"
-                                type="number"
-                                value={form.stock}
-                                onChange={handleChange}
-                                placeholder="Stock"
-                                required
-                                className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            />
-                        </div>
-
-                        <textarea
-                            name="description"
-                            value={form.description}
-                            onChange={handleChange}
-                            placeholder="Description"
-                            rows={3}
-                            className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                        />
+                        </select>
 
                         <input
-                            name="features"
-                            value={form.features}
+                            name="price"
+                            type="number"
+                            value={form.price}
                             onChange={handleChange}
-                            placeholder="Features"
+                            placeholder="Price"
+                            required
                             className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
-
                         <input
-                            name="specifications"
-                            value={form.specifications}
+                            name="stock"
+                            type="number"
+                            value={form.stock}
                             onChange={handleChange}
-                            placeholder="Specifications"
+                            placeholder="Stock"
+                            required
                             className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
+                    </div>
 
-                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Product Images</label>
-                            <input
-                                type="file"
-                                name="images"
-                                accept="image/*"
-                                multiple
-                                onChange={handleChange}
-                                className="block w-full text-sm text-gray-500"
-                            />
-                        </div>
+                    <textarea
+                        name="description"
+                        value={form.description}
+                        onChange={handleChange}
+                        placeholder="Description"
+                        rows={3}
+                        className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                    />
 
-                        <button
-                            type="submit"
-                            className="w-full py-3 text-white font-medium rounded-lg bg-gradient-to-r from-orange-500 to-purple-500 hover:opacity-90 transition duration-300"
-                        >
-                            {editingId ? 'Update Product' : 'Create Product'}
-                        </button>
-                    </form>
+                    <input
+                        name="features"
+                        value={form.features}
+                        onChange={handleChange}
+                        placeholder="Features"
+                        className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+
+                    <input
+                        name="specifications"
+                        value={form.specifications}
+                        onChange={handleChange}
+                        placeholder="Specifications"
+                        className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Upload Product Images</label>
+                        <input
+                            type="file"
+                            name="images"
+                            accept="image/*"
+                            multiple
+                            onChange={handleChange}
+                            className="block w-full text-sm text-gray-500"
+                        />
+                        {existingImages.length > 0 && (
+                            <div className="mt-4">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Existing Images</h4>
+                                <div className="flex gap-2 flex-wrap">
+                                    {existingImages.map((img, i) => (
+                                        <img
+                                            key={i}
+                                            src={img.url}
+                                            alt="product"
+                                            className="w-16 h-16 object-cover rounded border"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {previewImages.length > 0 && (
+                            <div className="mt-4">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Preview New Images</h4>
+                                <div className="flex gap-2 flex-wrap">
+                                    {previewImages.map((src, i) => (
+                                        <img
+                                            key={i}
+                                            src={src}
+                                            alt={`preview-${i}`}
+                                            className="w-16 h-16 object-cover rounded border"
+                                        />
+                                    ))}
+                                </div>
+                                {form.images.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setForm(prev => ({ ...prev, images: [] }));
+                                            setPreviewImages([]);
+                                        }}
+                                        className="mt-2 text-sm text-red-500 hover:underline"
+                                    >
+                                        Clear Selected Images
+                                    </button>
+                                )}
+
+                            </div>
+                        )}
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full py-3 text-white font-medium rounded-lg bg-gradient-to-r from-orange-500 to-purple-500 hover:opacity-90 transition duration-300"
+                    >
+                        {editingId ? 'Update Product' : 'Create Product'}
+                    </button>
+                </form>
                 {/* Product List */}
                 <div className="bg-white rounded-2xl shadow-xl p-6">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
