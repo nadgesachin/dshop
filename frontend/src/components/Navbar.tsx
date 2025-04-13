@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import logo from '../assets/logo.png';
@@ -55,12 +55,6 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            <Link
-              to="/cart"
-              className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-full transition"
-            >
-              <ShoppingCart className="h-6 w-6" />
-            </Link>
             {isAuthenticated ? (
               <>
                 <Link
@@ -115,15 +109,7 @@ const Navbar = () => {
             </Link>
           ))}
 
-          <div className="flex flex-col items-start gap-2 mt-4">
-            <Link
-              to="/cart"
-              onClick={closeMenu}
-              className="text-white hover:bg-white hover:text-orange-500 p-2 rounded-md"
-            >
-              <ShoppingCart className="h-6 w-6" />
-            </Link>
-
+          <div className="flex flex-col items-start gap-2 mt-4 ml-[8px]">
             {isAuthenticated ? (
               <>
                 <Link

@@ -21,3 +21,43 @@
 .simplebar-track.simplebar-vertical .simplebar-scrollbar:hover::before {
   background: linear-gradient(to bottom, #EA580C, #C2410C);
 }
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 1.4s linear infinite;
+  }
+
+  .animate-dash {
+    animation: dash 1.4s ease-in-out infinite;
+  }
+
+  @keyframes dash {
+    0% {
+      stroke-dasharray: 1, 150;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dasharray: 90, 150;
+      stroke-dashoffset: -35;
+    }
+    100% {
+      stroke-dasharray: 90, 150;
+      stroke-dashoffset: -124;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

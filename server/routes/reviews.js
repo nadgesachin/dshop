@@ -1,14 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const Review = require('../models/Review');
-const upload = require('../utils/multer');
-const { uploadToCloudinary } = require('../utils/cloudinary');
 const sendEmail = require('../utils/sendEmail');
 // Get all reviews
 router.get('/', async (req, res) => {
   try {
-    const reviews = await Review.find().sort({ createdAt: -1 });
-    res.json({ reviews });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const total = await Review.countDocuments();
+    const totalPages = Math.ceil(total / limit);
+    const reviews = await Review.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+    res.json({ reviews, total, page, limit, totalPages });
   } catch (error) {
     console.error('Error fetching reviews:', error);
     res.status(500).json({ error: 'Failed to fetch reviews' });
@@ -27,13 +30,11 @@ router.get('/approved', async (req, res) => {
 });
 
 // Submit a new review
-router.post('/', upload.array('photos', 5), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    console.log('Received review submission:', req.body);
-    console.log('Files:', req.files);
 
     // Validate required fields
-    const { name, email, rating, product, comment } = req.body;
+    const { name, email, rating, product, comment, profilePhoto, photos } = req.body;
     const missingFields = [];
 
     if (!name) missingFields.push('name');
@@ -49,44 +50,18 @@ router.post('/', upload.array('photos', 5), async (req, res) => {
       });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    // Validate rating
-    const ratingNum = Number(rating);
-    if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
-    }
-
-    // Handle photo uploads
-    let photoUrls = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        try {
-          const result = await uploadToCloudinary(file.path);
-          photoUrls.push(result.secure_url);
-        } catch (error) {
-          console.error('Error uploading photo:', error);
-        }
-      }
-    }
-
+    
     // Create new review
     const review = new Review({
-      name,
-      email,
-      rating: ratingNum,
-      product,
-      comment,
-      photos: photoUrls,
+      name:req.body.name,
+      email:req.body.email,
+      rating:req.body.rating,
+      product:req.body.product,
+      comment:req.body.comment,
+      photos: req.body.photos,
+      profilePhoto: req.body.profilePhoto
     });
-
     await review.save();
-    try {
-
       const html = `
         <div style="
           font-family: 'Segoe UI', sans-serif;
@@ -146,14 +121,9 @@ router.post('/', upload.array('photos', 5), async (req, res) => {
         subject: 'New Review Received',
         html: html
       };
-
-      await sendEmail(mailOptions);
-      console.log('Email notification sent successfully');
-    } catch (emailError) {
-      console.error('Error sending email notification:', emailError);
-      // Don't fail the review submission if email fails
-    }
-
+      if(process.env.NODE_ENV === 'production'){
+        await sendEmail(mailOptions);
+      }
     res.status(201).json({
       success: true,
       message: 'Review submitted successfully',
@@ -194,7 +164,14 @@ router.delete('/:id', async (req, res) => {
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
     }
-
+    if (review.profilePhoto) {
+      await deleteFromCloudinary(review.profilePhoto);
+    }
+    if (review.photos) {
+      for (const photo of review.photos) {
+        await deleteFromCloudinary(photo);
+      }
+    }
     await review.remove();
     res.json({ message: 'Review deleted successfully' });
   } catch (error) {

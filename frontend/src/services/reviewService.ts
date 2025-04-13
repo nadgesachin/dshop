@@ -10,6 +10,7 @@ export interface Review {
   product: string;
   comment: string;
   photos?: string[];
+  profilePhoto?: string;
   status: string;
   createdAt: string;
 }
@@ -20,17 +21,22 @@ export interface ReviewFormData {
   rating: number;
   product: string;
   comment: string;
-  photos?: File[];
+  photos?: string[];
+  profilePhoto?: string;
 }
 
-export const submitReview = async (formData: FormData): Promise<Review> => {
+export const submitReview = async (formData: any): Promise<Review> => {
   try {
-    console.log('Submitting review with form data to:', API_URL);
-    const response = await axios.post(`${API_URL}/reviews`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    console.log('Submitting review with form data to:', formData);
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_URL}/reviews`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to submit review');
@@ -67,3 +73,25 @@ export const getProductReviews = async (productId: string): Promise<Review[]> =>
     return [];
   }
 }; 
+
+export const deleteReview = async (id: string): Promise<void> => {
+  try {
+    const response = await axios.delete(`${API_URL}/reviews/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    throw error;
+  }
+};
+
+// Example API function (adjust URL as needed)
+export const fetchReviews = async (page = 1) => {
+  try {
+    const res = await axios.get(`${API_URL}/reviews?page=${page}`);
+    return res.data; 
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return [];
+  }
+};
+

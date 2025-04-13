@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const auth = require('../middleware/auth');
-const multer = require('multer');
+const { auth }= require('../middleware/authMiddleware');
+const multer = require('multer'); 
 const upload = require('../utils/multer');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
 

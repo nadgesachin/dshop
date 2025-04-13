@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Calendar, Image } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { signupUser } from '../services/signupService';
-
+import { uploadImage } from '../services/upload';
 
 export const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<{
     name: string;
     email: string;
-    photo: File | null;
+    photo: string | null;
     dob: string;
     password: string;
     repassword: string;
@@ -54,6 +54,19 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
 
+const handleImageUpload = async (file: File | null, type: 'profilePhoto' | 'photos') => {
+  try {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    const response = await uploadImage(formData);
+    setFormData(prev => ({ ...prev, photo: response.url }));
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
@@ -103,7 +116,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setFormData(prev => ({ ...prev, photo: file }));
+                    handleImageUpload(file, 'profilePhoto');
                   }
                 }}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"

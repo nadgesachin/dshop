@@ -12,6 +12,7 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 
+app.use(cors()); 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
 const reviewsDir = path.join(uploadsDir, 'reviews');
@@ -22,12 +23,6 @@ if (!fs.existsSync(uploadsDir)) {
 if (!fs.existsSync(reviewsDir)) {
   fs.mkdirSync(reviewsDir);
 }
-
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
 
 // Configure Morgan logging
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]'));
@@ -49,7 +44,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/shop', require('./routes/shop'));
-
+app.use('/api/upload', require('./routes/upload'));
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
