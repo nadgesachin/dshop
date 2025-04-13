@@ -55,7 +55,7 @@ export const submitReview = async (formData: any): Promise<Review> => {
 export const getReviews = async (): Promise<Review[]> => {
   try {
     console.log('Fetching reviews from:', API_URL);
-    const response = await axios.get(`${API_URL}/reviews/approved`);
+    const response = await axios.get(`${API_URL}/reviews/`);
     return response.data.reviews || [];
   } catch (error) {
     console.error('Error fetching reviews:', error);
