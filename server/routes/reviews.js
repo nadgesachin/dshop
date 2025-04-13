@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Review = require('../models/Review');
 const sendEmail = require('../utils/sendEmail');
+const { deleteFromCloudinary } = require('../utils/cloudinary');
 // Get all reviews
 router.get('/', async (req, res) => {
   try {
@@ -33,6 +34,7 @@ router.get('/approved', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
 
+    console.log("req.body", req.body);
     // Validate required fields
     const { name, email, rating, product, comment, profilePhoto, photos } = req.body;
     const missingFields = [];
@@ -49,7 +51,6 @@ router.post('/', async (req, res) => {
         fields: missingFields
       });
     }
-
     
     // Create new review
     const review = new Review({
@@ -157,6 +158,19 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
+
+function getPublicIdFromUrl(url) {
+  if (!url) return null;
+
+  const parts = url.split('/');
+  const uploadIndex = parts.indexOf('upload');
+  if (uploadIndex === -1) return null;
+
+  const publicIdWithVersion = parts.slice(uploadIndex + 1).join('/'); // e.g. v123/reviews/img123.webp
+  const withoutVersion = publicIdWithVersion.replace(/^v\d+\//, ''); // remove leading "v123/"
+  return withoutVersion.replace(/\.[^/.]+$/, ''); // remove .webp/.jpg etc.
+}
+
 // Delete review (Admin only)
 router.delete('/:id', async (req, res) => {
   try {
@@ -164,17 +178,26 @@ router.delete('/:id', async (req, res) => {
     if (!review) {
       return res.status(404).json({ message: 'Review not found' });
     }
-    if (review.profilePhoto) {
-      await deleteFromCloudinary(review.profilePhoto);
+
+    const { profilePhoto, photos } = review;
+
+    if (profilePhoto) {
+      const profilePublicId = getPublicIdFromUrl(profilePhoto);
+      if (profilePublicId) await deleteFromCloudinary(profilePublicId);
     }
-    if (review.photos) {
-      for (const photo of review.photos) {
-        await deleteFromCloudinary(photo);
+
+    if (Array.isArray(photos)) {
+      for (const photo of photos) {
+        const photoId = getPublicIdFromUrl(photo);
+        if (photoId) await deleteFromCloudinary(photoId);
       }
     }
-    await review.remove();
-    res.json({ message: 'Review deleted successfully' });
+
+    await review.deleteOne(); // ✅ Proper way in Mongoose 6+
+
+    return res.json({ message: 'Review deleted successfully' });
   } catch (error) {
+    console.error('Error deleting review:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

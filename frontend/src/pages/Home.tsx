@@ -23,19 +23,18 @@ const Home: React.FC = () => {
     product: '',
     comment: '',
     profilePhoto: null,
-    photos: []
+    photos: [],
+    acceptedTerms: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [email, setEmail] = useState('');
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [photosUrl, setPhotosUrl] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, setIsAuthenticatedMethod } = useAuth();
   const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [reviewsPerPage] = useState(5); // Number of reviews per page
   const [showAllReviewsModal, setShowAllReviewsModal] = useState(false);
@@ -255,14 +254,14 @@ const Home: React.FC = () => {
 
   const loadReviews = async (page: number, direction = 'down') => {
     setLoadingMore(true);
-  
+
     const container = scrollContainerRef.current as HTMLElement | null;
     const prevScrollHeight = container?.scrollHeight;
-  
+
     const res = await fetchReviews(page);
-  
+
     console.log("res", res);
-  
+
     setCurrentReviewsTest(prev => {
       if (page === 1 && direction === 'down') {
         return res.reviews; // ← Replace on first load
@@ -272,9 +271,9 @@ const Home: React.FC = () => {
           : [...prev, ...res.reviews];
       }
     });
-  
+
     setCurrentPageTest(page);
-  
+
     if (direction === 'up' && container) {
       setTimeout(() => {
         const newScrollHeight = container.scrollHeight;
@@ -282,7 +281,7 @@ const Home: React.FC = () => {
       }, 50);
     }
     setLoadingMore(false);
-  };  
+  };
 
   const handleScroll = async (e: any) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -308,6 +307,7 @@ const Home: React.FC = () => {
       if (!isAuthenticated) {
         // Append user details only if not logged in
         try {
+          console.log("profilePhotoUrl", profilePhotoUrl);
           const user = await signupUser({
             name: reviewForm.name,
             email: reviewForm.email,
@@ -316,7 +316,9 @@ const Home: React.FC = () => {
             password: ''
           });
           toast.success('User created successfully');
+          console.log("user", user);
           localStorage.setItem('token', user.token);
+          setIsAuthenticatedMethod(true);
           const userData = await getUser(user.token);
           console.log("userData", userData);
           formData = {
@@ -354,7 +356,6 @@ const Home: React.FC = () => {
       console.log("formData", formData);
       const newReview = await submitReview(formData);
       setReviews(prevReviews => [newReview, ...prevReviews]);
-
       // Reset form
       setReviewForm({
         name: '',
@@ -363,8 +364,10 @@ const Home: React.FC = () => {
         product: '',
         comment: '',
         profilePhoto: null,
-        photos: []
+        photos: [],
+        acceptedTerms: false,
       });
+
       toast.success("Submitted your valuable review");
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -383,7 +386,9 @@ const Home: React.FC = () => {
       if (type === 'profilePhoto') {
         formData.append('profilePhoto', file as File);
         const result = await uploadImage(formData);
-        setProfilePhotoUrl(result.url);
+        console.log("result", result.profilePhotoUrl);
+
+        setProfilePhotoUrl(result.profilePhotoUrl);
       } else {
         if (Array.isArray(file)) {
           file.forEach(photo => {
@@ -393,7 +398,8 @@ const Home: React.FC = () => {
           formData.append('photos', file);
         }
         const result = await uploadImage(formData);
-        setPhotosUrl(prevPhotos => [...prevPhotos, result.url]);
+        console.log("result2", result.photosUrls);
+        setPhotosUrl(result.photosUrls);
       }
       setIsUploading(false);
     } catch (error) {
@@ -427,29 +433,16 @@ const Home: React.FC = () => {
       console.log('Newsletter subscription:', email);
 
       // Show success toast
-      setToastMessage('Thank you for subscribing to our newsletter!');
       toast.success('Thank you for subscribing to our newsletter!');
-      setShowToast(true);
       setEmail('');
       setShowNewsletterModal(false);
     } catch (error) {
       // Show error toast
-      setToastMessage('Failed to subscribe. Please try again later.');
       toast.error('Failed to subscribe. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Auto-hide toast after 5 seconds
-  useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
 
   useEffect(() => {
     const timer = setInterval(nextSlide, 5000);
@@ -1054,6 +1047,28 @@ const Home: React.FC = () => {
                   </div>
                 </div>
               </div>
+              {
+                !isAuthenticated && (
+                  <div className="flex items-start mt-4">
+                    <input
+                      type="checkbox"
+                      id="acceptTerms"
+                      checked={reviewForm.acceptedTerms}
+                      onChange={(e) =>
+                        setReviewForm((prev) => ({
+                          ...prev,
+                          acceptedTerms: e.target.checked,
+                        }))
+                      }
+                      className="mt-1 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                      required
+                    />
+                    <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">
+                      I accept the terms & conditions to create an account automatically with my review.
+                    </label>
+                  </div>
+                )
+              }
 
               <div className="mt-10 text-center">
                 <button
@@ -1213,33 +1228,6 @@ const Home: React.FC = () => {
           </div>
         )
       }
-
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 right-4 z-[99999]">
-          <div className="bg-white rounded-lg shadow-lg p-4 max-w-sm">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <Bell className="h-6 w-6 text-orange-500" />
-              </div>
-              <div className="ml-3 w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {toastMessage}
-                </p>
-              </div>
-              <div className="ml-4 flex-shrink-0 flex">
-                <button
-                  className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
-                  onClick={() => setShowToast(false)}
-                >
-                  <span className="sr-only">Close</span>
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showNewsletterModal && (
         <div className="fixed inset-0 z-[99999] overflow-y-auto">

@@ -6,6 +6,7 @@ interface AuthContextType {
   authInitialized: boolean;
   login: (email: string, password: string) => Promise<string>;
   logout: () => void;
+  setIsAuthenticatedMethod: (isAuthenticated: boolean) => void;
 }
 
 
@@ -24,7 +25,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setAuthInitialized(true); // Mark as initialized no matter what
   }, []);
-
 
   const login = async (email: string, password: string) => {
     try {
@@ -52,8 +52,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
   };
 
+  const setIsAuthenticatedMethod = (isAuthenticated: boolean) => {
+    setIsAuthenticated(isAuthenticated);
+  }
   return (
-    <AuthContext.Provider value={{ isAuthenticated, authInitialized, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, authInitialized, login, logout, setIsAuthenticatedMethod }}>
       {children}
     </AuthContext.Provider>
 
