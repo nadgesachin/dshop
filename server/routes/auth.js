@@ -6,14 +6,15 @@ const User = require('../models/User');
 const upload = require('../utils/multer'); 
 const { uploadToCloudinary } = require('../utils/cloudinary');
 const sendEmail = require('../utils/sendEmail');
+const { authUser } = require('../middleware/authMiddleware');
 // Register new user
 router.post('/register', upload.single('photo'), async (req, res) => {
   try {
-    const { name, email, password, dob } = req.body;
+    const { name, email, password, dob, signup } = req.body;
     let photoUrl = '';
 
     // Validation
-    if (!name || !email || !password) {
+    if (!name || !email ) {
       return res.status(400).json({
         success: false,
         message: 'Name, email and password are required',
@@ -39,11 +40,24 @@ router.post('/register', upload.single('photo'), async (req, res) => {
       }
     }
 
+    if(!password){
+    //create unique password
+    const uniquePassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    req.body.password = uniquePassword;
+    if(process.env.NODE_ENV === 'production'){
+    sendEmail({
+      from: process.env.MAIL_USER,
+      to: email,
+      subject: 'Your Shiv Mobile Account Password',
+      html: `Your Shiv Mobile account password is: ${uniquePassword}`,
+      });
+      }
+    }
     // Create new user
     user = new User({
       name,
       email,
-      password,
+      password: password,
       photo: photoUrl,
       dob,
       role: 'user',
@@ -103,7 +117,9 @@ router.post('/register', upload.single('photo'), async (req, res) => {
         </div>
       `
     };
-    await sendEmail(mailOptions);
+    if(process.env.NODE_ENV === 'production'){
+      await sendEmail(mailOptions);
+    }
 
     jwt.sign(
       payload,
@@ -197,7 +213,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
+router.get('/me', authUser, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json({ success: true, user });

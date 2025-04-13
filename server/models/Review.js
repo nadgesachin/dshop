@@ -10,10 +10,8 @@ const reviewSchema = new mongoose.Schema({
     default: ''
   },
   rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5
+    type: String,
+    default: ''
   },
   product: {
     type: String,
@@ -25,7 +23,11 @@ const reviewSchema = new mongoose.Schema({
   },
   photos: [{
     type: String
-  }]
+  }],
+  profilePhoto: {
+    type: String,
+    default: ''
+  }
 }, {
   timestamps: true
 });
