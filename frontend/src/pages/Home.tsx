@@ -218,20 +218,21 @@ const Home: React.FC = () => {
     productSliderRef.current?.slickPrev();
   };
   // Fetch reviews on component mount
+  // Load only once
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
+    if (!reviewsLoaded) {
+      const fetchReviewsAll = async () => {
         const fetchedReviews = await getReviews();
         setReviews(fetchedReviews || []);
-        setAllReviews(fetchedReviews || []); // Store all reviews for pagination
-      } catch (error) {
-        console.error('Error fetching reviews:', error);
-        toast.error("Error fetching reviews");
-        setReviews([]);
-      }
-    };
-    fetchReviews();
-  }, []);
+        setAllReviews(fetchedReviews || []);
+        setReviewsLoaded(true);
+      };
+      fetchReviewsAll();
+    }
+  }, [reviewsLoaded]);
+
 
   // Handle pagination
   const totalPages = Math.ceil(allReviews.length / reviewsPerPage);
@@ -254,29 +255,34 @@ const Home: React.FC = () => {
 
   const loadReviews = async (page: number, direction = 'down') => {
     setLoadingMore(true);
-
+  
     const container = scrollContainerRef.current as HTMLElement | null;
     const prevScrollHeight = container?.scrollHeight;
-
-    const res = await fetchReviews(page); // Fetches reviews from API
-
+  
+    const res = await fetchReviews(page);
+  
     console.log("res", res);
-    setCurrentReviewsTest(prev =>
-      direction === 'up' ? [...res.reviews, ...prev] : [...prev, ...res.reviews]
-    );
-
+  
+    setCurrentReviewsTest(prev => {
+      if (page === 1 && direction === 'down') {
+        return res.reviews; // ← Replace on first load
+      } else {
+        return direction === 'up'
+          ? [...res.reviews, ...prev]
+          : [...prev, ...res.reviews];
+      }
+    });
+  
     setCurrentPageTest(page);
-
-    // Restore scroll position for upward loading
+  
     if (direction === 'up' && container) {
       setTimeout(() => {
         const newScrollHeight = container.scrollHeight;
         container.scrollTop = newScrollHeight - (prevScrollHeight || 0);
       }, 50);
     }
-
     setLoadingMore(false);
-  };
+  };  
 
   const handleScroll = async (e: any) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -575,7 +581,7 @@ const Home: React.FC = () => {
         </div>
 
         <div className="relative overflow-hidden">
-        <Slider ref={productSliderRef} {...settingsProduct}>
+          <Slider ref={productSliderRef} {...settingsProduct}>
             {products.map((product) => (
               <div key={product._id} className="w-full sm:w-1/2 md:w-1/3 flex-shrink-0 px-4">
                 <Link
@@ -610,25 +616,25 @@ const Home: React.FC = () => {
             ))}
           </Slider>
 
-        {/* Arrow Buttons (Centered Vertically on Slider) */}
-        <div className="absolute inset-y-0 left-0 flex items-center z-10">
-          <button
-            onClick={prevProductSlide}
-            className="ml-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
-          >
-            <ChevronLeft className="h-6 w-6 text-gray-600" />
-          </button>
-        </div>
+          {/* Arrow Buttons (Centered Vertically on Slider) */}
+          <div className="absolute inset-y-0 left-0 flex items-center z-10">
+            <button
+              onClick={prevProductSlide}
+              className="ml-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
+            >
+              <ChevronLeft className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
 
-        <div className="absolute inset-y-0 right-0 flex items-center z-10">
-          <button
-            onClick={nextProductSlide}
-            className="mr-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
-          >
-            <ChevronRight className="h-6 w-6 text-gray-600" />
-          </button>
+          <div className="absolute inset-y-0 right-0 flex items-center z-10">
+            <button
+              onClick={nextProductSlide}
+              className="mr-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
+            >
+              <ChevronRight className="h-6 w-6 text-gray-600" />
+            </button>
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Customer Reviews Section */}
@@ -640,53 +646,59 @@ const Home: React.FC = () => {
           </div>
 
           <Slider {...settings}>
-            {reviews.map((review) => (
-              <div key={review._id} className="px-2">
-                <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
-                  {/* Top Section */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start space-x-4">
-                      <img
-                        src={review.photos?.[0] || defaultAvatar}
-                        alt={`${review.name} profile`}
-                        className="w-10 h-10 rounded-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = defaultAvatar;
-                        }}
-                      />
-                      <div>
-                        <h3 className="text-lg font-semibold">{review.name}</h3>
-                        <p className="text-gray-500 text-sm">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </p>
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div key={review._id} className="px-2">
+                  <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
+                    {/* Top Section */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start space-x-4">
+                        <img
+                          src={review.photos?.[0] || defaultAvatar}
+                          alt={`${review.name} profile`}
+                          className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = defaultAvatar;
+                          }}
+                        />
+                        <div>
+                          <h3 className="text-lg font-semibold">{review.name}</h3>
+                          <p className="text-gray-500 text-sm">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                          />
+                        ))}
                       </div>
                     </div>
-                    <div className="flex mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                        />
-                      ))}
+
+                    {/* Comment Section */}
+                    <div className="text-gray-600 text-md line-clamp-4">{review.comment}</div>
+
+                    {/* View More Button */}
+                    <div className="pt-3">
+                      <button
+                        onClick={() => handleViewMore(review)}
+                        className="text-sm text-orange-500 hover:underline"
+                      >
+                        View More
+                      </button>
                     </div>
                   </div>
-
-                  {/* Comment Section */}
-                  <div className="text-gray-600 text-md line-clamp-4">{review.comment}</div>
-
-                  {/* View More Button */}
-                  <div className="pt-3">
-                    <button
-                      onClick={() => handleViewMore(review)}
-                      className="text-sm text-orange-500 hover:underline"
-                    >
-                      View More
-                    </button>
-                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500">
+                <h3 className="text-lg font-semibold">No reviews found</h3>
               </div>
-            ))}
+            )}
           </Slider>
 
           {/* View All Reviews Button */}
@@ -711,7 +723,13 @@ const Home: React.FC = () => {
                 </button>
 
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">All Customer Reviews</h3>
-
+                {
+                  currentReviewsTest.length === 0 && (
+                    <div className="text-center text-gray-500">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">No reviews found</h3>
+                    </div>
+                  )
+                }
                 <div
                   ref={scrollContainerRef}
                   onScroll={handleScroll}
@@ -736,6 +754,7 @@ const Home: React.FC = () => {
                     <div className="text-center text-sm text-gray-500">Loading...</div>
                   )}
                 </div>
+
               </div>
             </div>
           )}
