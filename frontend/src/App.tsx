@@ -16,6 +16,8 @@ import './index.css';
 import AdminPromotions from './pages/AdminPromotions';
 import ManageProducts from './pages/ManageProducts';
 import ManageReviews from './pages/ManageReviews';
+import UserManager from './pages/AdminUsers';
+import Profile from './pages/Profile';
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -94,6 +96,22 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ManageReviews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <UserManager />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
