@@ -9,12 +9,10 @@ interface AuthContextType {
   setIsAuthenticatedMethod: (isAuthenticated: boolean) => void;
 }
 
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
@@ -33,10 +31,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       });
 
-      const { token } = response.data;
-      localStorage.setItem('auth_token', token);
+      const { token, role } = response.data;
+      localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setIsAuthenticated(true);
+      console.log("response.data",response.data);
+      if(role && role === 'admin'){
+        localStorage.setItem('admin', role);
+      }
       return token;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -47,13 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('admin');
     delete axios.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
   };
 
-  const setIsAuthenticatedMethod = (isAuthenticated: boolean) => {
-    setIsAuthenticated(isAuthenticated);
+  const setIsAuthenticatedMethod = (flag: boolean) => {
+    setIsAuthenticated(flag);
   }
   return (
     <AuthContext.Provider value={{ isAuthenticated, authInitialized, login, logout, setIsAuthenticatedMethod }}>

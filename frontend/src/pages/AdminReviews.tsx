@@ -107,9 +107,17 @@ const AdminReviews: React.FC = () => {
                 </td>
               </tr>
             ))}
+            
           </tbody>
         </table>
+        { reviews.length <= 0 && (
+                  <>
+                    <div className="text-center text-gray-500">
+                      <h3 className="text-lg font-semibold">No reviews found</h3>
+                    </div>
 
+                  </>
+                )}
         {/* Mobile Card View */}
         <div className="md:hidden space-y-4 p-4">
           {reviews.map((review) => (

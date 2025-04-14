@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,17 +7,25 @@ import logo from '../assets/logo.png';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
-
+  
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Products', path: '/products' },
     { name: 'Reviews', path: '/reviews' },
     { name: 'Contact', path: '/contact' },
   ];
-
+  
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(()=>{
+    const admin = localStorage.getItem('admin');
+    if(admin === 'admin'){
+      setIsAdmin(true);
+    }
+  },[])
   const handleLogout = () => {
     logout();
     toast.success('Logged out successfully');
@@ -48,8 +56,8 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 className={`px-4 py-2 rounded-xl transition duration-200 ${location.pathname === item.path
-                    ? 'bg-white text-orange-500 shadow-sm'
-                    : 'text-white hover:bg-white hover:text-orange-500'
+                  ? 'bg-white text-orange-500 shadow-sm'
+                  : 'text-white hover:bg-white hover:text-orange-500'
                   }`}
               >
                 {item.name}
@@ -57,12 +65,22 @@ const Navbar = () => {
             ))}
             {isAuthenticated ? (
               <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={closeMenu}
+                    className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
                 <Link
-                  to="/admin"
-                  className="px-4 py-2 rounded-xl text-white hover:bg-white hover:text-orange-500 transition"
-                >
-                  Admin Dashboard
-                </Link>
+                    to="/profile"
+                    onClick={closeMenu}
+                    className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
+                  >
+                    Profile
+                  </Link>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 rounded-xl text-white hover:bg-white hover:text-orange-500 transition"
@@ -101,8 +119,8 @@ const Navbar = () => {
               to={item.path}
               onClick={closeMenu}
               className={`block px-4 py-2 rounded-lg text-base font-medium transition ${location.pathname === item.path
-                  ? 'bg-white text-orange-500'
-                  : 'text-white hover:bg-white hover:text-orange-500'
+                ? 'bg-white text-orange-500'
+                : 'text-white hover:bg-white hover:text-orange-500'
                 }`}
             >
               {item.name}
@@ -112,13 +130,22 @@ const Navbar = () => {
           <div className="flex flex-col items-start gap-2 mt-4 ml-[8px]">
             {isAuthenticated ? (
               <>
+                { isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={closeMenu}
+                    className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
                 <Link
-                  to="/admin"
-                  onClick={closeMenu}
-                  className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
-                >
-                  Admin Dashboard
-                </Link>
+                    to="/profile"
+                    onClick={closeMenu}
+                    className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"
+                  >
+                    Profile
+                  </Link>
                 <button
                   onClick={handleLogout}
                   className="text-white hover:bg-white hover:text-orange-500 px-4 py-2 rounded-md"

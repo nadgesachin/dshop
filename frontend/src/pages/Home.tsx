@@ -27,6 +27,7 @@ const Home: React.FC = () => {
     acceptedTerms: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingReview, setIsLoadingReview] = useState(false);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,10 +36,17 @@ const Home: React.FC = () => {
   const [photosUrl, setPhotosUrl] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const { isAuthenticated, setIsAuthenticatedMethod } = useAuth();
-  const [allReviews, setAllReviews] = useState<Review[]>([]);
   const [reviewsPerPage] = useState(5); // Number of reviews per page
   const [showAllReviewsModal, setShowAllReviewsModal] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
+  
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(()=>{
+    const admin = localStorage.getItem('admin');
+    if(admin === 'admin'){
+      setIsAdmin(true);
+    }
+  },[])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -216,25 +224,29 @@ const Home: React.FC = () => {
   const prevProductSlide = () => {
     productSliderRef.current?.slickPrev();
   };
-  // Fetch reviews on component mount
-  // Load only once
   const [reviewsLoaded, setReviewsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!reviewsLoaded) {
-      const fetchReviewsAll = async () => {
+    const fetchReviewsAll = async () => {
+      try {
+        setIsLoadingReview(true);
         const fetchedReviews = await getReviews();
         setReviews(fetchedReviews || []);
-        setAllReviews(fetchedReviews || []);
         setReviewsLoaded(true);
-      };
+      } catch (err) {
+        console.error('Failed to fetch reviews', err);
+      } finally {
+        setIsLoadingReview(false);
+      }
+    };
+  
+    if (!reviewsLoaded) {
       fetchReviewsAll();
     }
-  }, [reviewsLoaded]);
-
+  }, [reviewsLoaded]);  
 
   // Handle pagination
-  const totalPages = Math.ceil(allReviews.length / reviewsPerPage);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
   const handleViewAllReviews = () => {
     setShowAllReviewsModal(true);
   };
@@ -307,7 +319,6 @@ const Home: React.FC = () => {
       if (!isAuthenticated) {
         // Append user details only if not logged in
         try {
-          console.log("profilePhotoUrl", profilePhotoUrl);
           const user = await signupUser({
             name: reviewForm.name,
             email: reviewForm.email,
@@ -367,6 +378,8 @@ const Home: React.FC = () => {
         photos: [],
         acceptedTerms: false,
       });
+      setProfilePhotoUrl(null);
+      setPhotosUrl([]);
 
       toast.success("Submitted your valuable review");
     } catch (error) {
@@ -386,7 +399,6 @@ const Home: React.FC = () => {
       if (type === 'profilePhoto') {
         formData.append('profilePhoto', file as File);
         const result = await uploadImage(formData);
-        console.log("result", result.profilePhotoUrl);
 
         setProfilePhotoUrl(result.profilePhotoUrl);
       } else {
@@ -398,7 +410,6 @@ const Home: React.FC = () => {
           formData.append('photos', file);
         }
         const result = await uploadImage(formData);
-        console.log("result2", result.photosUrls);
         setPhotosUrl(result.photosUrls);
       }
       setIsUploading(false);
@@ -637,72 +648,109 @@ const Home: React.FC = () => {
             <h2 className="text-4xl font-extrabold text-gray-900">What Our Customers Say</h2>
             <p className="mt-4 text-lg text-gray-600">Real feedback from our happy customers</p>
           </div>
+          {!isLoadingReview ? (
+            <>
+              <Slider {...settings}>
+                {reviews.length > 0 && (
+                  reviews.map((review) => (
+                    <div key={review._id} className="px-2">
+                      <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
+                        {/* Top Section */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start space-x-4">
+                            <img
+                              src={review.photos?.[0] || defaultAvatar}
+                              alt={`${review.name} profile`}
+                              className="w-10 h-10 rounded-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = defaultAvatar;
+                              }}
+                            />
+                            <div>
+                              <h3 className="text-lg font-semibold">{review.name}</h3>
+                              <p className="text-gray-500 text-sm">
+                                {new Date(review.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex mt-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
 
-          <Slider {...settings}>
-            {reviews.length > 0 ? (
-              reviews.map((review) => (
-                <div key={review._id} className="px-2">
-                  <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
-                    {/* Top Section */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start space-x-4">
-                        <img
-                          src={review.photos?.[0] || defaultAvatar}
-                          alt={`${review.name} profile`}
-                          className="w-10 h-10 rounded-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = defaultAvatar;
-                          }}
-                        />
-                        <div>
-                          <h3 className="text-lg font-semibold">{review.name}</h3>
-                          <p className="text-gray-500 text-sm">
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </p>
+                        {/* Comment Section */}
+                        <div className="text-gray-600 text-md line-clamp-4">{review.comment}</div>
+
+                        {/* View More Button */}
+                        <div className="pt-3">
+                          <button
+                            onClick={() => handleViewMore(review)}
+                            className="text-sm text-orange-500 hover:underline"
+                          >
+                            View More
+                          </button>
                         </div>
                       </div>
-                      <div className="flex mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                          />
-                        ))}
-                      </div>
+                    </div>
+                  ))
+                  
+                ) }
+              </Slider>
+              {/* View All Reviews Button */}
+              { reviews.length <= 0 && (
+                  <>
+                    <div className="text-center text-gray-500">
+                      <h3 className="text-lg font-semibold">No reviews found</h3>
                     </div>
 
-                    {/* Comment Section */}
-                    <div className="text-gray-600 text-md line-clamp-4">{review.comment}</div>
-
-                    {/* View More Button */}
-                    <div className="pt-3">
-                      <button
-                        onClick={() => handleViewMore(review)}
-                        className="text-sm text-orange-500 hover:underline"
-                      >
-                        View More
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-500">
-                <h3 className="text-lg font-semibold">No reviews found</h3>
+                  </>
+                )}
+                { reviews.length > 0 && (
+                <div className="text-center mt-6">
+                <button
+                  onClick={handleViewAllReviews}
+                  className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
+                >
+                  View All Reviews
+                </button>
               </div>
-            )}
-          </Slider>
-
-          {/* View All Reviews Button */}
-          <div className="text-center mt-6">
-            <button
-              onClick={handleViewAllReviews}
-              className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
-            >
-              View All Reviews
-            </button>
-          </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col items-center gap-6 mt-2">
+                <div className="relative w-24 h-24">
+                  <svg className="w-full h-full animate-spin-slow -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      fill="none"
+                      stroke="rgba(229, 231, 235, 1)"  // Tailwind gray-200
+                      strokeWidth="4"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="16"
+                      fill="none"
+                      stroke="rgba(249, 115, 22, 1)"  // Tailwind orange-500
+                      strokeWidth="4"
+                      strokeDasharray="90"
+                      strokeLinecap="round"
+                      className="animate-dash"
+                    />
+                  </svg>
+                </div>
+                <p className="text-gray-600 font-medium text-base tracking-wide">Loading... Please wait</p>
+              </div></>
+          )}
 
           {/* Modal for All Reviews */}
           {showAllReviewsModal && (
@@ -805,283 +853,285 @@ const Home: React.FC = () => {
       </div>
 
       {/* Get Review Section */}
-      <div className="bg-gradient-to-b from-gray-50 to-white py-10">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-gray-900 mb-3">Share Your Experience</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Help others by sharing your valuable feedback about our products and services.
-            </p>
-          </div>
+      {!isAdmin && (
+        <div className="bg-gradient-to-b from-gray-50 to-white py-10">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-gray-900 mb-3">Share Your Experience</h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Help others by sharing your valuable feedback about our products and services.
+              </p>
+            </div>
 
-          <div className=" mx-auto">
-            <form
-              onSubmit={handleReviewSubmit}
-              className="bg-white p-10 rounded-3xl shadow-xl transition-transform hover:scale-[1.01] duration-300"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  {
-                    !isAuthenticated ? (
-                      <>
-                        {/* Name */}
-                        <div>
-                          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                            Your Name
-                          </label>
-                          <div className="relative">
-                            <User className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
-                            <input
-                              type="text"
-                              id="name"
-                              name="name"
-                              value={reviewForm.name}
-                              onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                              placeholder="John Doe"
-                              required
-                            />
+            <div className=" mx-auto">
+              <form
+                onSubmit={handleReviewSubmit}
+                className="bg-white p-10 rounded-3xl shadow-xl transition-transform hover:scale-[1.01] duration-300"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    {
+                      !isAuthenticated ? (
+                        <>
+                          {/* Name */}
+                          <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                              Your Name
+                            </label>
+                            <div className="relative">
+                              <User className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+                              <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value={reviewForm.name}
+                                onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                                placeholder="John Doe"
+                                required
+                              />
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Email */}
-                        <div>
-                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                            Email Address
-                          </label>
-                          <div className="relative">
-                            <Mail className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
-                            <input
-                              type="email"
-                              id="email"
-                              name="email"
-                              value={reviewForm.email}
-                              onChange={(e) => setReviewForm({ ...reviewForm, email: e.target.value })}
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                              placeholder="john@example.com"
-                              required
-                            />
+                          {/* Email */}
+                          <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                              Email Address
+                            </label>
+                            <div className="relative">
+                              <Mail className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+                              <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={reviewForm.email}
+                                onChange={(e) => setReviewForm({ ...reviewForm, email: e.target.value })}
+                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                                placeholder="john@example.com"
+                                required
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                      </>
-                    )
-                  }
+                        </>
+                      ) : (
+                        <>
+                        </>
+                      )
+                    }
 
-                  {/* Product */}
-                  <div>
-                    <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
-                      Product Purchased
-                    </label>
-                    <div className="relative">
-                      <ShoppingBag className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
-                      <select
-                        id="product"
-                        name="product"
-                        value={reviewForm.product}
-                        onChange={(e) => setReviewForm({ ...reviewForm, product: e.target.value })}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                        required
-                      >
-                        <option value="">Select a product</option>
-                        {mockProducts.map((product) => (
-                          <option key={product.id} value={product.name}>
-                            {product.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Rating */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Your Rating</label>
-                    <div className="flex gap-2 p-3 bg-gray-50 rounded-lg">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                          className="transition-transform hover:scale-110"
+                    {/* Product */}
+                    <div>
+                      <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
+                        Product Purchased
+                      </label>
+                      <div className="relative">
+                        <ShoppingBag className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
+                        <select
+                          id="product"
+                          name="product"
+                          value={reviewForm.product}
+                          onChange={(e) => setReviewForm({ ...reviewForm, product: e.target.value })}
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                          required
                         >
-                          <Star
-                            className={`h-8 w-8 ${star <= reviewForm.rating
-                              ? 'text-yellow-400 fill-current drop-shadow-sm'
-                              : 'text-gray-300'
-                              }`}
-                          />
-                        </button>
-                      ))}
+                          <option value="">Select a product</option>
+                          {mockProducts.map((product) => (
+                            <option key={product.id} value={product.name}>
+                              {product.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Rating */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Your Rating</label>
+                      <div className="flex gap-2 p-3 bg-gray-50 rounded-lg">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`h-8 w-8 ${star <= reviewForm.rating
+                                ? 'text-yellow-400 fill-current drop-shadow-sm'
+                                : 'text-gray-300'
+                                }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Comment */}
+                    <div>
+                      <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
+                        Your Review
+                      </label>
+                      <div className="relative">
+                        <MessageSquare className="absolute top-3 left-3 h-5 w-5 text-gray-400" />
+                        <textarea
+                          id="comment"
+                          name="comment"
+                          rows={6}
+                          value={reviewForm.comment}
+                          onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                          placeholder="Share your detailed experience with this product..."
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {
+                      !isAuthenticated ? (
+                        <>
+                          {/* Profile Photo */}
+                          <div>
+                            <label htmlFor="profilePhoto" className="block text-sm font-medium text-gray-700 mb-1">
+                              User Profile Photo (Optional)
+                            </label>
+                            <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-orange-400 transition">
+                              <input
+                                type="file"
+                                id="profilePhoto"
+                                name="profilePhoto"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  hendleChangeImage(e, 'profilePhoto')
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              />
+                              <div className="space-y-2 pointer-events-none">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                              </div>
+                            </div>
+
+                            {profilePhotoUrl && (
+                              <div className="mt-4">
+                                <p className="text-sm text-gray-600">Selected files:</p>
+                                <ul className="mt-2 space-y-1 text-sm text-gray-500">
+                                  <li key={0} className="flex items-center justify-between">
+                                    <span className="truncate">{profilePhotoUrl}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setProfilePhotoUrl(null);
+                                      }}
+                                      className="ml-2 text-red-500 hover:text-red-700 text-lg"
+                                    >
+                                      ×
+                                    </button>
+                                  </li>
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                        </>
+                      )
+                    }
+
+                    {/* Review Photos */}
+                    <div>
+                      <label htmlFor="photos" className="block text-sm font-medium text-gray-700 mb-1">
+                        Review Photos (Optional)
+                      </label>
+                      <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-orange-400 transition">
+                        <input
+                          type="file"
+                          id="photos"
+                          name="photos"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => {
+                            hendleChangeImage(e, 'photos')
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="space-y-2 pointer-events-none">
+                          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                      </div>
+
+                      {photosUrl.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-600">Selected files:</p>
+                          <ul className="mt-2 space-y-1 text-sm text-gray-500">
+                            {photosUrl.map((url, index) => (
+                              <li key={index} className="flex items-center justify-between">
+                                <span className="truncate">{url}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setReviewForm(prev => ({
+                                      ...prev,
+                                      photos: prev.photos.filter((_, i) => i !== index)
+                                    }));
+                                  }}
+                                  className="ml-2 text-red-500 hover:text-red-700 text-lg"
+                                >
+                                  ×
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-
-                <div className="space-y-6">
-                  {/* Comment */}
-                  <div>
-                    <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Review
-                    </label>
-                    <div className="relative">
-                      <MessageSquare className="absolute top-3 left-3 h-5 w-5 text-gray-400" />
-                      <textarea
-                        id="comment"
-                        name="comment"
-                        rows={6}
-                        value={reviewForm.comment}
-                        onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                        placeholder="Share your detailed experience with this product..."
+                {
+                  !isAuthenticated && (
+                    <div className="flex items-start mt-4">
+                      <input
+                        type="checkbox"
+                        id="acceptTerms"
+                        checked={reviewForm.acceptedTerms}
+                        onChange={(e) =>
+                          setReviewForm((prev) => ({
+                            ...prev,
+                            acceptedTerms: e.target.checked,
+                          }))
+                        }
+                        className="mt-1 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
                         required
                       />
+                      <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">
+                        I accept the terms & conditions to create an account automatically with my review.
+                      </label>
                     </div>
-                  </div>
+                  )
+                }
 
-                  {
-                    !isAuthenticated ? (
-                      <>
-                        {/* Profile Photo */}
-                        <div>
-                          <label htmlFor="profilePhoto" className="block text-sm font-medium text-gray-700 mb-1">
-                            User Profile Photo (Optional)
-                          </label>
-                          <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-orange-400 transition">
-                            <input
-                              type="file"
-                              id="profilePhoto"
-                              name="profilePhoto"
-                              accept="image/*"
-                              onChange={(e) => {
-                                hendleChangeImage(e, 'profilePhoto')
-                              }}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                            <div className="space-y-2 pointer-events-none">
-                              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
-                              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                            </div>
-                          </div>
-
-                          {profilePhotoUrl && (
-                            <div className="mt-4">
-                              <p className="text-sm text-gray-600">Selected files:</p>
-                              <ul className="mt-2 space-y-1 text-sm text-gray-500">
-                                <li key={0} className="flex items-center justify-between">
-                                  <span className="truncate">{profilePhotoUrl}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setProfilePhotoUrl(null);
-                                    }}
-                                    className="ml-2 text-red-500 hover:text-red-700 text-lg"
-                                  >
-                                    ×
-                                  </button>
-                                </li>
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                      </>
-                    )
-                  }
-
-                  {/* Review Photos */}
-                  <div>
-                    <label htmlFor="photos" className="block text-sm font-medium text-gray-700 mb-1">
-                      Review Photos (Optional)
-                    </label>
-                    <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-orange-400 transition">
-                      <input
-                        type="file"
-                        id="photos"
-                        name="photos"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          hendleChangeImage(e, 'photos')
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                      <div className="space-y-2 pointer-events-none">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                      </div>
-                    </div>
-
-                    {photosUrl.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-600">Selected files:</p>
-                        <ul className="mt-2 space-y-1 text-sm text-gray-500">
-                          {photosUrl.map((url, index) => (
-                            <li key={index} className="flex items-center justify-between">
-                              <span className="truncate">{url}</span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setReviewForm(prev => ({
-                                    ...prev,
-                                    photos: prev.photos.filter((_, i) => i !== index)
-                                  }));
-                                }}
-                                className="ml-2 text-red-500 hover:text-red-700 text-lg"
-                              >
-                                ×
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                <div className="mt-10 text-center">
+                  <button
+                    type="submit"
+                    className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
+                  >
+                    Submit Review
+                  </button>
                 </div>
-              </div>
-              {
-                !isAuthenticated && (
-                  <div className="flex items-start mt-4">
-                    <input
-                      type="checkbox"
-                      id="acceptTerms"
-                      checked={reviewForm.acceptedTerms}
-                      onChange={(e) =>
-                        setReviewForm((prev) => ({
-                          ...prev,
-                          acceptedTerms: e.target.checked,
-                        }))
-                      }
-                      className="mt-1 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-                      required
-                    />
-                    <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">
-                      I accept the terms & conditions to create an account automatically with my review.
-                    </label>
-                  </div>
-                )
-              }
-
-              <div className="mt-10 text-center">
-                <button
-                  type="submit"
-                  className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
-                >
-                  Submit Review
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* create model for loading when isLoading is true */}
       {isLoading && (
@@ -1130,8 +1180,7 @@ const Home: React.FC = () => {
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900">Visit Our Store</h2>
-            <p className="mt-4 text-lg text-gray-600">Find us at our convenient location in Silvassa</p>
+            <h2 className="text-2xl font-extrabold text-gray-900">Visit Our Store</h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
