@@ -18,10 +18,11 @@ const Navbar = () => {
     { name: 'Reviews', path: '/reviews' },
     { name: 'Contact', path: '/contact' },
   ];
-  
   const [isAdmin, setIsAdmin] = useState(false);
+  
   useEffect(()=>{
     const admin = localStorage.getItem('admin');
+    console.log("admin",admin);
     if(admin === 'admin'){
       setIsAdmin(true);
     }

@@ -8,8 +8,9 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { useAuth } from '../contexts/AuthContext';
-import { signupUser, getUser } from '@/services/signupService';
+import { getUser } from '@/services/signupService';
 import { uploadImage } from '@/services/upload';
+import { saveSubcriber } from '../services/subscribeService';
 
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -35,18 +36,18 @@ const Home: React.FC = () => {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [photosUrl, setPhotosUrl] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const { isAuthenticated, setIsAuthenticatedMethod } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [reviewsPerPage] = useState(5); // Number of reviews per page
   const [showAllReviewsModal, setShowAllReviewsModal] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
-  
+
   const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(()=>{
+  useEffect(() => {
     const admin = localStorage.getItem('admin');
-    if(admin === 'admin'){
+    if (admin === 'admin') {
       setIsAdmin(true);
     }
-  },[])
+  }, [])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -149,16 +150,13 @@ const Home: React.FC = () => {
 
   const settings = {
     dots: true,
-    infinite: true,
+    infinite: false, // set to false if you only want to render exactly what's there
     speed: 600,
     slidesToShow: 1,
     slidesToScroll: 1,
     arrows: true,
-    autoplay: true,
-    autoplaySpeed: 5000,
+    autoplay: false, // disable this while debugging
     pauseOnHover: true,
-
-    // 👇 Custom dot appearance
     customPaging: () => (
       <div className="w-4 h-4 bg-gray-300 rounded-full transition hover:bg-orange-500" />
     ),
@@ -224,26 +222,28 @@ const Home: React.FC = () => {
   const prevProductSlide = () => {
     productSliderRef.current?.slickPrev();
   };
-  const [reviewsLoaded, setReviewsLoaded] = useState(false);
 
   useEffect(() => {
     const fetchReviewsAll = async () => {
       try {
         setIsLoadingReview(true);
         const fetchedReviews = await getReviews();
-        setReviews(fetchedReviews || []);
-        setReviewsLoaded(true);
+        console.log("Fetched Reviews:", fetchedReviews); // Log the fetched reviews
+
+        const uniqueReviews = fetchedReviews.filter((review, index, self) =>
+          index === self.findIndex((r) => r._id === review._id)
+        );
+
+        setReviews(uniqueReviews || []);
       } catch (err) {
         console.error('Failed to fetch reviews', err);
       } finally {
         setIsLoadingReview(false);
       }
     };
-  
-    if (!reviewsLoaded) {
-      fetchReviewsAll();
-    }
-  }, [reviewsLoaded]);  
+
+    fetchReviewsAll();
+  }, []);
 
   // Handle pagination
   const totalPages = Math.ceil(reviews.length / reviewsPerPage);
@@ -316,40 +316,19 @@ const Home: React.FC = () => {
       setIsLoading(true);
       setIsSubmitting(true);
       let formData: any = {};
-      if (!isAuthenticated) {
-        // Append user details only if not logged in
+      if (isAuthenticated) {
         try {
-          const user = await signupUser({
-            name: reviewForm.name,
-            email: reviewForm.email,
-            photo: profilePhotoUrl,
-            dob: '',
-            password: ''
-          });
-          toast.success('User created successfully');
-          console.log("user", user);
-          localStorage.setItem('token', user.token);
-          setIsAuthenticatedMethod(true);
-          const userData = await getUser(user.token);
-          console.log("userData", userData);
-          formData = {
-            name: userData.user.name,
-            email: userData.user.email,
-          }
-        } catch (error) {
-          console.error('Error creating user:', error);
-          toast.error('Error creating user');
-          return;
+          const token = localStorage.getItem('token');
+          const userData = await getUser(token);
+          formData.name = userData.user.name;
+          formData.email = userData.user.email;
+        } catch (err: any) {
+          toast.error(err);
         }
       } else {
-        const token = localStorage.getItem('token');
-        const userData = await getUser(token);
-        formData = {
-          name: userData.user.name,
-          email: userData.user.email,
-        }
+        formData.name = reviewForm.name;
+        formData.email = reviewForm.email;
       }
-
       // Append review details
       formData.rating = reviewForm.rating.toString();
       formData.product = reviewForm.product;
@@ -366,7 +345,11 @@ const Home: React.FC = () => {
 
       console.log("formData", formData);
       const newReview = await submitReview(formData);
-      setReviews(prevReviews => [newReview, ...prevReviews]);
+
+      // Update reviews state with the new review
+
+      setReviews(prevReviews => [newReview, ...prevReviews.filter(review => review._id !== newReview._id)]);
+
       // Reset form
       setReviewForm({
         name: '',
@@ -380,7 +363,6 @@ const Home: React.FC = () => {
       });
       setProfilePhotoUrl(null);
       setPhotosUrl([]);
-
       toast.success("Submitted your valuable review");
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -399,7 +381,7 @@ const Home: React.FC = () => {
       if (type === 'profilePhoto') {
         formData.append('profilePhoto', file as File);
         const result = await uploadImage(formData);
-
+        console.log("profilephoto ", result);
         setProfilePhotoUrl(result.profilePhotoUrl);
       } else {
         if (Array.isArray(file)) {
@@ -410,6 +392,7 @@ const Home: React.FC = () => {
           formData.append('photos', file);
         }
         const result = await uploadImage(formData);
+        console.log("photos", result);
         setPhotosUrl(result.photosUrls);
       }
       setIsUploading(false);
@@ -432,28 +415,29 @@ const Home: React.FC = () => {
     }
     e.target.files = null;
   }
+
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Here you would typically send the email to your backend
-      console.log('Newsletter subscription:', email);
-
-      // Show success toast
-      toast.success('Thank you for subscribing to our newsletter!');
+      const { message } = await saveSubcriber(email);
+      toast.success(message);
       setEmail('');
       setShowNewsletterModal(false);
-    } catch (error) {
-      // Show error toast
-      toast.error('Failed to subscribe. Please try again later.');
+    } catch (error: any) {
+      const errMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to subscribe. Please try again later.';
+      toast.error(errMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
+
 
   useEffect(() => {
     const timer = setInterval(nextSlide, 5000);
@@ -537,7 +521,7 @@ const Home: React.FC = () => {
                       <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                         {category.name}
                       </h2>
-                      <p className="text-sm sm:text-base md:text-lg opacity-90 mb-2">
+                      <p className="text-sm sm:text-base md:text-lg opacity-90 mb-2 truncate sm:whitespace-normal sm:overflow-visible sm:text-ellipsis">
                         {category.description}
                       </p>
                       <p className="text-sm sm:text-base font-medium">
@@ -648,18 +632,20 @@ const Home: React.FC = () => {
             <h2 className="text-4xl font-extrabold text-gray-900">What Our Customers Say</h2>
             <p className="mt-4 text-lg text-gray-600">Real feedback from our happy customers</p>
           </div>
+
           {!isLoadingReview ? (
             <>
-              <Slider {...settings}>
-                {reviews.length > 0 && (
-                  reviews.map((review) => (
+              {/* Slider */}
+              {reviews.length > 0 ? (
+                <Slider {...settings}>
+                  {reviews.map((review) => (
                     <div key={review._id} className="px-2">
                       <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
                         {/* Top Section */}
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-start space-x-4">
                             <img
-                              src={review.photos?.[0] || defaultAvatar}
+                              src={review.profilePhoto || defaultAvatar}
                               alt={`${review.name} profile`}
                               className="w-10 h-10 rounded-full object-cover"
                               onError={(e) => {
@@ -678,14 +664,17 @@ const Home: React.FC = () => {
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                  }`}
                               />
                             ))}
                           </div>
                         </div>
 
                         {/* Comment Section */}
-                        <div className="text-gray-600 text-md line-clamp-4">{review.comment}</div>
+                        <div className="text-gray-600 text-md line-clamp-2 sm:line-clamp-4">
+                          {review.comment}
+                        </div>
 
                         {/* View More Button */}
                         <div className="pt-3">
@@ -698,58 +687,53 @@ const Home: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  ))
-                  
-                ) }
-              </Slider>
-              {/* View All Reviews Button */}
-              { reviews.length <= 0 && (
-                  <>
-                    <div className="text-center text-gray-500">
-                      <h3 className="text-lg font-semibold">No reviews found</h3>
-                    </div>
+                  ))}
+                </Slider>
+              ) : (
+                <div className="text-center text-gray-500">
+                  <h3 className="text-lg font-semibold">No reviews found</h3>
+                </div>
+              )}
 
-                  </>
-                )}
-                { reviews.length > 0 && (
+              {/* View All Reviews Button */}
+              {reviews.length > 0 && (
                 <div className="text-center mt-6">
-                <button
-                  onClick={handleViewAllReviews}
-                  className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
-                >
-                  View All Reviews
-                </button>
-              </div>
+                  <button
+                    onClick={handleViewAllReviews}
+                    className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
+                  >
+                    View All Reviews
+                  </button>
+                </div>
               )}
             </>
           ) : (
-            <>
-              <div className="flex flex-col items-center gap-6 mt-2">
-                <div className="relative w-24 h-24">
-                  <svg className="w-full h-full animate-spin-slow -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="16"
-                      fill="none"
-                      stroke="rgba(229, 231, 235, 1)"  // Tailwind gray-200
-                      strokeWidth="4"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="16"
-                      fill="none"
-                      stroke="rgba(249, 115, 22, 1)"  // Tailwind orange-500
-                      strokeWidth="4"
-                      strokeDasharray="90"
-                      strokeLinecap="round"
-                      className="animate-dash"
-                    />
-                  </svg>
-                </div>
-                <p className="text-gray-600 font-medium text-base tracking-wide">Loading... Please wait</p>
-              </div></>
+            <div className="flex flex-col items-center gap-6 mt-2">
+              <div className="relative w-24 h-24">
+                <svg className="w-full h-full animate-spin-slow -rotate-90" viewBox="0 0 36 36">
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="rgba(229, 231, 235, 1)"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="rgba(249, 115, 22, 1)"
+                    strokeWidth="4"
+                    strokeDasharray="90"
+                    strokeLinecap="round"
+                    className="animate-dash"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-600 font-medium text-base tracking-wide">Loading... Please wait</p>
+            </div>
           )}
 
           {/* Modal for All Reviews */}
@@ -813,7 +797,7 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 shadow">
                     <img
-                      src={selectedReview.photos?.[0] || defaultAvatar}
+                      src={selectedReview.profilePhoto || defaultAvatar}
                       alt={selectedReview.name}
                       className="h-full w-full object-cover"
                     />
@@ -1096,7 +1080,7 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {
+                {/* {
                   !isAuthenticated && (
                     <div className="flex items-start mt-4">
                       <input
@@ -1117,7 +1101,7 @@ const Home: React.FC = () => {
                       </label>
                     </div>
                   )
-                }
+                } */}
 
                 <div className="mt-10 text-center">
                   <button

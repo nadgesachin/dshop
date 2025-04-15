@@ -18,6 +18,8 @@ import ManageProducts from './pages/ManageProducts';
 import ManageReviews from './pages/ManageReviews';
 import UserManager from './pages/AdminUsers';
 import Profile from './pages/Profile';
+import QRCodePage from './pages/QRCode';
+import AdminSubscriber from './pages/AdminSubscriber';
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -112,6 +114,22 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/qrcode"
+            element={
+              <ProtectedRoute>
+                <QRCodePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/subscriber"
+            element={
+              <ProtectedRoute>
+                <AdminSubscriber />
               </ProtectedRoute>
             }
           />
