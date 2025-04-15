@@ -87,6 +87,7 @@ const ManageProducts = () => {
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
+        setLoading(true);
         const formData = new FormData();
 
         Object.entries(form).forEach(([key, val]) => {
@@ -112,6 +113,8 @@ const ManageProducts = () => {
             fetchProducts();
         } catch {
             toast.error('Failed to save product');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -318,17 +321,25 @@ const ManageProducts = () => {
                                                     <span className="text-sm text-gray-400">No image</span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-2 font-semibold">{p.name}</td>
+                                            <td
+                                                title={p.name}
+                                                className="px-4 py-2 font-semibold max-w-[120px] truncate text-ellipsis whitespace-nowrap"
+                                            >
+                                                {p.name}
+                                            </td>
                                             <td className="px-4 py-2">₹{p.price}</td>
                                             <td className="px-4 py-2">{p.stock}</td>
-                                            <td className="px-4 py-2 space-x-2">
-                                                <button onClick={() => handleEdit(p)} className="text-blue-600 hover:underline">
-                                                    <Edit className="inline h-5 w-5" />
-                                                </button>
-                                                <button onClick={() => handleDelete(p._id)} className="text-red-600 hover:underline">
-                                                    <Trash className="inline h-5 w-5" />
-                                                </button>
+                                            <td className="px-1 py-2">
+                                                <div className="flex items-center space-x-2">
+                                                    <button onClick={() => handleEdit(p)} className="text-blue-600 hover:underline">
+                                                        <Edit className="inline h-5 w-5" />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(p._id)} className="text-red-600 hover:underline">
+                                                        <Trash className="inline h-5 w-5" />
+                                                    </button>
+                                                </div>
                                             </td>
+
                                         </tr>
                                     ))}
                                 </tbody>

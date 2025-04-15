@@ -125,11 +125,12 @@ import { Link } from 'react-router-dom';
 import {
   Package,
   MessageSquare,
-  Users,
   Mail,
   BadgePercent,
-  LayoutDashboard
+  LayoutDashboard,
+  QrCode
 } from 'lucide-react';
+
 
 const AdminDashboard = () => {
   const cards = [
@@ -149,19 +150,25 @@ const AdminDashboard = () => {
       name: 'Newsletter Subscribers',
       description: 'See who subscribed to your newsletter.',
       icon: <Mail className="h-8 w-8 text-orange-500" />,
-      to: '/admin/newsletters',
+      to: '/admin/subscriber',
     },
-    {
-      name: 'Registered Users',
-      description: 'View all signed-up users.',
-      icon: <Users className="h-8 w-8 text-orange-500" />,
-      to: '/admin/users',
-    },
+    // {
+    //   name: 'Registered Users',
+    //   description: 'View all signed-up users.',
+    //   icon: <Users className="h-8 w-8 text-orange-500" />,
+    //   to: '/admin/users',
+    // },
     {
       name: 'Promotional Campaigns',
       description: 'Manage banners, offers, and discount campaigns.',
       icon: <BadgePercent className="h-8 w-8 text-orange-500" />,
       to: '/admin/promotions',
+    },
+    {
+      name: 'QR Code Generate',
+      description: 'Generate your website QR code.',
+      icon: <QrCode className="h-8 w-8 text-orange-500" />,
+      to: '/admin/qrcode',
     },
   ];
 

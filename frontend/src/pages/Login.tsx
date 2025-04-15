@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +18,7 @@ export const Login = () => {
     const token = await login(email, password);
     if (token) {
       toast.success('Login successful!');
-      const from = (location.state as any)?.from?.pathname || '/admin';
+      const from = '/';
       navigate(from);
     } else {
       toast.error('Invalid credentials. Please try again.');

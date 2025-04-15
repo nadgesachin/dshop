@@ -1,56 +1,101 @@
-import React, { useState } from 'react';
-import {Trash2, Pencil } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+// import { Trash2, Pencil, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { uploadImage } from '@/services/upload';
+import { addPromotion, getAllPromotions } from '@/services/promotionService';
+import toast from 'react-hot-toast';
 
 const ManagePromotions: React.FC = () => {
-  const [campaigns, setCampaigns] = useState<any[]>([
-    {
-      title: 'Summer Mega Sale',
-      description: 'Get up to 50% off on selected electronics. Limited time offer!',
-      image: 'https://images.unsplash.com/photo-1592503254549-1ad65c08b2ce?auto=format&fit=crop&w=400&q=80',
-      file: null,
-    },
-  ]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
 
   const [form, setForm] = useState<{
     title: string;
     description: string;
     image: string;
-    file: File | null;
-  }>({ title: '', description: '', image: '', file: null });
+  }>({ title: '', description: '', image: '' });
 
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setForm((prev) => ({ ...prev, image: reader.result as string, file }));
+  const handleImageUpload = async (file: File | File[] | null) => {
+    if (!file) return;
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('profilePhoto', file as File);
+      const result = await uploadImage(formData);
+      setPhotoUrl(result.profilePhotoUrl);
+      setIsUploading(false);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleChangeImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0] || null;
+      await handleImageUpload(file);
+      e.target.files = null;
+    } catch (error) {
+      toast.error("Error occure during image upload");
+    }
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const campaignData = {
+        title: form.title,
+        description: form.description,
+        image: photoUrl || form.image, // fallback if image isn't re-uploaded
       };
-      reader.readAsDataURL(file);
+  
+      await addPromotion(campaignData); // Backend call
+      toast.success("Submit Successfully");
+  
+      setCampaigns((prev) => {
+        const updated = [...prev];
+        if (editIndex !== null) {
+          updated[editIndex] = campaignData;
+        } else {
+          updated.push(campaignData);
+        }
+        return updated;
+      });
+  
+      // Reset form
+      setForm({ title: '', description: '', image: '' });
+      setPhotoUrl('');
+      setEditIndex(null);
+    } catch (error: any) {
+      toast.error(error?.message || "Submission failed");
     }
   };
+  
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const res = await getAllPromotions();
+        setCampaigns(res.data); // <== make sure to access .data
+      } catch (error: any) {
+        toast.error('Failed to load promotions');
+        console.error(error);
+      }
+    };
+  
+    fetchPromotions();
+  }, []);  
 
-  const handleAddOrEdit = () => {
-    if (editIndex !== null) {
-      const updated = [...campaigns];
-      updated[editIndex] = form;
-      setCampaigns(updated);
-    } else {
-      setCampaigns((prev) => [...prev, form]);
-    }
-    setForm({ title: '', description: '', image: '', file: null });
-    setEditIndex(null);
-  };
+  // const handleEdit = (index: number) => {
+  //   setForm(campaigns[index]);
+  //   setEditIndex(index);
+  // };
 
-  const handleEdit = (index: number) => {
-    setForm(campaigns[index]);
-    setEditIndex(index);
-  };
-
-  const handleDelete = (index: number) => {
-    setCampaigns((prev) => prev.filter((_, i) => i !== index));
-  };
+  // const handleDelete = (index: number) => {
+  //   setCampaigns((prev) => prev.filter((_, i) => i !== index));
+  // };
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -85,7 +130,7 @@ const ManagePromotions: React.FC = () => {
                 id="photos"
                 name="photos"
                 accept="image/*"
-                onChange={handleImageUpload}
+                onChange={handleChangeImage}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
               <div className="space-y-2 pointer-events-none">
@@ -96,17 +141,40 @@ const ManagePromotions: React.FC = () => {
                 <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
               </div>
             </div>
+              {photoUrl && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">Selected files:</p>
+                  <ul className="mt-2 space-y-1 text-sm text-gray-500">
+                    <li key={0} className="flex items-center justify-between">
+                      <span className="truncate">{photoUrl}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhotoUrl('');
+                        }}
+                        className="ml-2 text-red-500 hover:text-red-700 text-lg"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
           </div>
         </div>
-
-        {form.image && (
-          <div className="mt-4">
-            <img src={form.image} alt="Preview" className="h-40 object-cover rounded-lg" />
-          </div>
-        )}
+        <button
+          onClick={() => {
+            setForm({ title: '', description: '', image: '' });
+            setPhotoUrl('');
+            setEditIndex(null);
+          }}
+          className="mt-4 ml-4 bg-gray-300 text-black px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+        >
+          Cancel
+        </button>
 
         <button
-          onClick={handleAddOrEdit}
+          onClick={handleSubmit}
           className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
         >
           {editIndex !== null ? 'Update Campaign' : 'Add Campaign'}
@@ -125,17 +193,58 @@ const ManagePromotions: React.FC = () => {
                 <p className="text-gray-600 text-sm">{camp.description}</p>
               </div>
             </div>
-            <div className="flex space-x-2">
+            {/* <div className="flex space-x-2">
               <button onClick={() => handleEdit(index)} className="p-2 rounded bg-yellow-400 text-white hover:bg-yellow-500">
                 <Pencil className="h-4 w-4" />
               </button>
               <button onClick={() => handleDelete(index)} className="p-2 rounded bg-red-500 text-white hover:bg-red-600">
                 <Trash2 className="h-4 w-4" />
               </button>
-            </div>
+            </div> */}
           </div>
         ))}
       </div>
+      {isUploading && (
+        <div className="fixed inset-0 z-[99999] bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 w-full max-w-sm relative animate-fade-in">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsUploading(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Loader Visual */}
+            <div className="flex flex-col items-center gap-6 mt-2">
+              <div className="relative w-24 h-24">
+                <svg className="w-full h-full animate-spin-slow -rotate-90" viewBox="0 0 36 36">
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="rgba(229, 231, 235, 1)"  // Tailwind gray-200
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="rgba(249, 115, 22, 1)"  // Tailwind orange-500
+                    strokeWidth="4"
+                    strokeDasharray="90"
+                    strokeLinecap="round"
+                    className="animate-dash"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-600 font-medium text-base tracking-wide">Uploading... hang tight</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

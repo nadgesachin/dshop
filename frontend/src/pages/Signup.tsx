@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Calendar, Image, X, EyeOff, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,14 +10,7 @@ export const Signup = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(()=>{
-    const admin = localStorage.getItem('admin');
-    if(admin === 'admin'){
-      setIsAdmin(true);
-    }
-  },[])
   const [formData, setFormData] = useState<{
     name: string;
     email: string;
@@ -97,33 +90,6 @@ export const Signup = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            {/* Role */}
-            {isAdmin && (
-              <div>
-                <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <div className="relative">
-                  <User className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
-                  <select
-                    id="product"
-                    name="product"
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                    required
-                  >
-                    <option value="">Select a Role</option>
-                    <option key='user' value='user'>
-                      User
-                    </option>
-                    <option key='admin' value='admin'>
-                      Admin
-                    </option>
-                  </select>
-                </div>
-              </div>
-            )}
             {/* Name */}
             <div className="relative">
               <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />

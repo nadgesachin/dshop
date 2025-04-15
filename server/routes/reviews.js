@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
 
     console.log("req.body", req.body);
     // Validate required fields
-    const { name, email, rating, product, comment, profilePhoto, photos } = req.body;
+    const { name, email, rating, product, comment } = req.body;
     const missingFields = [];
 
     if (!name) missingFields.push('name');
