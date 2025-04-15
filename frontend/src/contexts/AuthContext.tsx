@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setIsAuthenticated(true);
+      console.log("response.data: ",response.data);
       if(role && role === 'admin'){
         localStorage.setItem('admin', 'admin');
       }
