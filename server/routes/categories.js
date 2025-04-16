@@ -3,16 +3,20 @@ const router = express.Router();
 const Category = require('../models/Category');
 
 // Get all categories
-router.get('/', async (req, res) => {
+router.get('/getall', async (req, res) => {
   try {
     const categories = await Category.find().sort({ name: 1 });
-    res.json({ success: true, categories });
+    res.json({ 
+      success: true,
+      data: categories 
+    });
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Error fetching categories',
-      error: error.message 
+      error: error.message, 
+      data:[]
     });
   }
 });
@@ -39,12 +43,22 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create category (Admin only)
-router.post('/', async (req, res) => {
+router.post('/save', async (req, res) => {
   try {
-    const { name, description, image } = req.body;
-    const category = new Category({ name, description, image });
+    const { name, description } = req.body;
+    if(!name){
+      res.status(500).json({ 
+        success: false, 
+        message: 'Category name required',
+        data:[]
+      });
+    }
+    const category = new Category({ name, description : description || '' });
     await category.save();
-    res.status(201).json({ success: true, category });
+    res.status(201).json({ 
+      success: true, 
+      data: category
+     });
   } catch (error) {
     console.error('Error creating category:', error);
     res.status(500).json({ 

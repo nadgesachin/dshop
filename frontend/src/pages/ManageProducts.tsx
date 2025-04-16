@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Trash, Edit, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Category, getAllCategories, createCategory } from '@/services/categoryService';
 import {
     createProduct,
     deleteProduct,
@@ -24,13 +25,13 @@ export interface Product {
     createdAt?: string;
 }
 
-const categories = [
-    'CCTV Cameras',
-    'Computer CPUs',
-    'Monitors and parts',
-    'Speakers',
-    'Printers'
-];
+// const categories = [
+//     'CCTV Cameras',
+//     'Computer CPUs',
+//     'Monitors and parts',
+//     'Speakers',
+//     'Printers'
+// ];
 
 const initialForm = {
     name: '',
@@ -45,18 +46,47 @@ const initialForm = {
 
 const ManageProducts = () => {
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [form, setForm] = useState(initialForm);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [previewImages, setPreviewImages] = useState<string[]>([]);
     const [existingImages, setExistingImages] = useState<Product['images']>([]);
+    const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    // const [hasMore, setHasMore] = useState(true);
+    // const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+    const limit = 10; // number of products per page
 
+    const handleAddNewCategory = async () => {
+        if (!newCategoryName.trim()) {
+            return toast.error('Please enter a category name');
+        }
 
-    const fetchProducts = async () => {
+        try {
+            const response = await createCategory({ name: newCategoryName }); // <- use your backend API here
+            const newCat = response;
+
+            setCategories((prev) => [...prev, newCat]);
+            setForm((prev) => ({ ...prev, category: newCat.name }));
+
+            toast.success('Category added successfully!');
+            setNewCategoryName('');
+            setShowNewCategoryInput(false);
+            fetchCategories();
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to add category');
+        }
+    };
+
+    const fetchCategories = async () => {
         setLoading(true);
         try {
-            const data = await getAllProducts();
-            setProducts(data);
+            const response = await getAllCategories();
+            console.log(response);
+            setCategories(response.data.data || []);
         } catch {
             toast.error('Failed to fetch products');
         } finally {
@@ -64,8 +94,26 @@ const ManageProducts = () => {
         }
     };
 
+    const fetchProducts = async (pageNumber = 1) => {
+        try {
+            // setIsLoadingProduct(true);
+            const res = await getAllProducts(pageNumber, limit);
+            setProducts(res.data);
+            setTotalPages(res.totalPages);
+        } catch (err) {
+            toast.error('Failed to fetch products');
+        } finally {
+            // setIsLoadingProduct(false);
+        }
+    };
+
     useEffect(() => {
-        fetchProducts();
+        fetchProducts(page);
+    }, [page]);
+
+
+    useEffect(() => {
+        fetchCategories();
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -110,7 +158,7 @@ const ManageProducts = () => {
             setEditingId(null);
             setExistingImages([]);
             setPreviewImages([]);
-            fetchProducts();
+            fetchProducts(page);
         } catch {
             toast.error('Failed to save product');
         } finally {
@@ -139,7 +187,7 @@ const ManageProducts = () => {
         try {
             await deleteProduct(id);
             toast.success('Deleted successfully');
-            fetchProducts();
+            fetchProducts(page);
         } catch {
             toast.error('Delete failed');
         }
@@ -170,15 +218,55 @@ const ManageProducts = () => {
                         <select
                             name="category"
                             value={form.category}
-                            onChange={handleChange}
+                            onChange={(e) => {
+                                if (e.target.value === '__add_new__') {
+                                    setShowNewCategoryInput(true);
+                                } else {
+                                    handleChange(e);
+                                }
+                            }}
                             required
                             className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-lg text-gray-900 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
                         >
                             <option value="">Select Category</option>
-                            {categories.map((cat) => (
-                                <option key={cat} value={cat}>{cat}</option>
-                            ))}
+                            <option value="__add_new__">➕ Add New Category</option>
+                            {
+                                Array.isArray(categories) && categories.map((category) => (
+                                    <option key={category._id} value={category.name}>
+                                        {category.name}
+                                    </option>
+                                ))}
                         </select>
+
+                        {showNewCategoryInput && (
+                            <div className="mt-2 flex gap-2 items-center">
+                                <input
+                                    type="text"
+                                    placeholder="Enter new category name"
+                                    value={newCategoryName}
+                                    onChange={(e) => setNewCategoryName(e.target.value)}
+                                    className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddNewCategory}
+                                    className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+                                >
+                                    Add
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowNewCategoryInput(false);
+                                        setNewCategoryName('');
+                                    }}
+                                    className="text-sm text-gray-500 hover:underline"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
+
 
                         <input
                             name="price"
@@ -241,7 +329,7 @@ const ManageProducts = () => {
                                 <div className="flex gap-2 flex-wrap">
                                     {existingImages.map((img, i) => (
                                         <img
-                                            key={i}
+                                            key={i + 1}
                                             src={img.url}
                                             alt="product"
                                             className="w-16 h-16 object-cover rounded border"
@@ -291,10 +379,37 @@ const ManageProducts = () => {
                 </form>
                 {/* Product List */}
                 <div className="bg-white rounded-2xl shadow-xl p-6">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                        <Package className="mr-2 text-orange-500" /> All Products
-                    </h2>
+                    {/* Header with pagination */}
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                            <Package className="mr-2 text-orange-500" /> All Products
+                        </h2>
 
+                        {/* Pagination Controls */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                disabled={page === 1}
+                                onClick={() => setPage(prev => prev - 1)}
+                                className={`px-3 py-1 rounded border text-sm ${page === 1 ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-100'
+                                    }`}
+                            >
+                                ← Prev
+                            </button>
+                            <span className="text-sm text-gray-600">
+                                Page {page} of {totalPages}
+                            </span>
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() => setPage(prev => prev + 1)}
+                                className={`px-3 py-1 rounded border text-sm ${page === totalPages ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-gray-700 border-gray-300 hover:bg-gray-100'
+                                    }`}
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Table */}
                     {loading ? (
                         <p className="text-gray-500">Loading products...</p>
                     ) : products.length === 0 ? (
@@ -316,7 +431,11 @@ const ManageProducts = () => {
                                         <tr key={p._id} className="border-t">
                                             <td className="px-4 py-2">
                                                 {p.images?.[0]?.url ? (
-                                                    <img src={p.images[0].url} alt={p.name} className="h-12 w-12 rounded-lg object-cover" />
+                                                    <img
+                                                        src={p.images[0].url}
+                                                        alt={p.name}
+                                                        className="h-12 w-12 rounded-lg object-cover"
+                                                    />
                                                 ) : (
                                                     <span className="text-sm text-gray-400">No image</span>
                                                 )}
@@ -331,15 +450,20 @@ const ManageProducts = () => {
                                             <td className="px-4 py-2">{p.stock}</td>
                                             <td className="px-1 py-2">
                                                 <div className="flex items-center space-x-2">
-                                                    <button onClick={() => handleEdit(p)} className="text-blue-600 hover:underline">
+                                                    <button
+                                                        onClick={() => handleEdit(p)}
+                                                        className="text-blue-600 hover:underline"
+                                                    >
                                                         <Edit className="inline h-5 w-5" />
                                                     </button>
-                                                    <button onClick={() => handleDelete(p._id)} className="text-red-600 hover:underline">
+                                                    <button
+                                                        onClick={() => handleDelete(p._id)}
+                                                        className="text-red-600 hover:underline"
+                                                    >
                                                         <Trash className="inline h-5 w-5" />
                                                     </button>
                                                 </div>
                                             </td>
-
                                         </tr>
                                     ))}
                                 </tbody>

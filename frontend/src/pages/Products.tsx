@@ -4,6 +4,7 @@ import {
   getAllProducts,
 } from '@/services/productService';
 import toast from 'react-hot-toast';
+import { Category, getAllCategories } from '@/services/categoryService';
 
 export interface Product {
   _id?: string;
@@ -25,112 +26,54 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  // const [page, setPage] = useState(1);
+  // const [hasMore, setHasMore] = useState(true);
+  // const [isLoadingProduct, setIsLoadingProduct] = useState(false);
 
   const defaultImage = 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
 
-  const categories = [
-    { id: 'all', name: 'All Products' },
-    { id: 'cctv', name: 'CCTV Cameras' },
-    { id: 'cpu', name: 'Computer CPUs' },
-    { id: 'monitor', name: 'Monitors' },
-    { id: 'speaker', name: 'Speakers' },
-    { id: 'printer', name: 'Printers' },
-  ];
-
-  // const products = [
-  //   {
-  //     id: 1,
-  //     name: '4K CCTV Camera',
-  //     category: 'cctv',
-  //     price: '₹5,999',
-  //     image: 'https://images.unsplash.com/photo-1618832515494-62f50e7e5ae8',
-  //     rating: 4.9,
-  //     description: 'High-resolution 4K CCTV camera with night vision.',
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Gaming CPU',
-  //     category: 'cpu',
-  //     price: '₹25,999',
-  //     image: 'https://images.unsplash.com/photo-1618401471344-22f7730f246b',
-  //     rating: 4.8,
-  //     description: 'High-performance gaming CPU with RGB lighting.',
-  //   },
-  //   {
-  //     id: 3,
-  //     name: '27" 4K Monitor',
-  //     category: 'monitor',
-  //     price: '₹12,999',
-  //     image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04',
-  //     rating: 4.7,
-  //     description: 'Ultra HD monitor with HDR support.',
-  //   },
-  //   {
-  //     id: 4,
-  //     name: 'Bluetooth Speaker',
-  //     category: 'speaker',
-  //     price: '₹1,999',
-  //     image: 'https://images.unsplash.com/photo-1594007654729-407eedc4be65',
-  //     rating: 4.5,
-  //     description: 'Portable speaker with rich bass and Bluetooth 5.0.',
-  //   },
-  //   {
-  //     id: 5,
-  //     name: 'Inkjet Printer',
-  //     category: 'printer',
-  //     price: '₹9,499',
-  //     image: 'https://images.unsplash.com/photo-1580824454447-53c1b2e5d7fc',
-  //     rating: 4.6,
-  //     description: 'Fast and cost-effective inkjet printer for home use.',
-  //   },
-  //   {
-  //     id: 6,
-  //     name: 'Color Laser Printer',
-  //     category: 'printer',
-  //     price: '₹15,499',
-  //     image: 'https://images.unsplash.com/photo-1616009087620-dcbbf9ae0fcd',
-  //     rating: 4.7,
-  //     description: 'Professional-quality color laser printer.',
-  //   },
-  //   {
-  //     id: 7,
-  //     name: 'Desktop CPU Tower',
-  //     category: 'cpu',
-  //     price: '₹19,999',
-  //     image: 'https://images.unsplash.com/photo-1632426341618-410d5dc245d2',
-  //     rating: 4.6,
-  //     description: 'Workstation tower with high processing power.',
-  //   },
-  //   {
-  //     id: 8,
-  //     name: 'Curved Gaming Monitor',
-  //     category: 'monitor',
-  //     price: '₹14,499',
-  //     image: 'https://images.unsplash.com/photo-1587202372775-98973fd7aa13',
-  //     rating: 4.8,
-  //     description: 'Curved display for immersive gaming experience.',
-  //   },
-  // ];
-
-  const fetchProducts = async () => {
+  const fetchCategories = async () => {
     try {
-      const data = await getAllProducts();
-      setProducts(data);
+      const response = await getAllCategories();
+      console.log(response);
+      setCategories(response.data.data || []);
     } catch {
       toast.error('Failed to fetch products');
+    } finally {
+    }
+  };
+  const fetchProducts = async (pageNumber: number) => {
+    // setIsLoadingProduct(true);
+    try {
+      const res = await getAllProducts(pageNumber, 20); // API must support page & limit
+      setProducts(prev => [...prev, ...res.data]);
+      // setHasMore(pageNumber < res.totalPages); // control further fetching
+    } catch (err) {
+      console.error('Error fetching products', err);
+    } finally {
+      // setIsLoadingProduct(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(1); // on initial load + every time page increases
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
   }, []);
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      selectedCategory === '' ||
+      product.category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
-
 
   return (
     <div className="min-h-screen py-12">
@@ -150,20 +93,38 @@ const Products = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <select
-                className="appearance-none pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <select
+                  className="w-full appearance-none pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Clear Button */}
+              {selectedCategory && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory('');
+                    setSearchQuery('');
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300"
+                >
+                  Clear Filters
+                </button>
+
+              )}
             </div>
+
           </div>
         </div>
 
@@ -177,16 +138,17 @@ const Products = () => {
               <img
                 src={product.images?.[0].url || defaultImage}
                 alt={product.name}
-                className="w-full h-48 object-cover"
+                className="w-full h-60 object-contain bg-white p-2 rounded-lg"
               />
+
               <div className="p-6">
                 <span className="text-sm text-gray-500 uppercase">
-                  {categories.find((c) => c.id === product.category)?.name}
+                  {categories.find((c) => c._id === product.category)?.name}
                 </span>
-                <h3 className="text-xl font-semibold mt-2 max-w-[200px] truncate whitespace-nowrap">
+                <h3 className="text-xl font-semibold mt-2 line-clamp-1">
                   {product.name}
                 </h3>
-                <p className="text-gray-600 mt-2 max-w-[250px] truncate whitespace-nowrap">
+                <p className="text-gray-600 mt-2 line-clamp-2">
                   {product.description}
                 </p>
                 <div className="flex items-center justify-between mt-4">
@@ -204,9 +166,26 @@ const Products = () => {
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
+        {filteredProducts.length === 0 ? (
+          <p className="text-center text-gray-500 mt-10">Products not found</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
+              <div key={product._id} className="bg-white shadow-lg rounded-lg overflow-hidden">
+                <img src={product?.images[0].url} alt={product.name} className="w-full h-60 object-contain bg-white p-2 rounded-lg" />
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold mt-2 line-clamp-1">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-600 mt-2 line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="mt-2">
+                    <span className="text-xl font-bold">${product.price}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

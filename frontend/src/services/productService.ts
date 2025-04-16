@@ -9,7 +9,13 @@ const multipartHeaders = {
     'Content-Type': 'multipart/form-data',
   },
 };
-
+interface ProductListResponse {
+  success: boolean;
+  data: Product[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 // Define Product type if needed
 export interface Product {
   _id?: string;
@@ -28,10 +34,13 @@ export interface Product {
 }
 
 // GET all products
-export const getAllProducts = async (): Promise<Product[]> => {
+export const getAllProducts = async (
+  page = 1,
+  limit = 10
+): Promise<ProductListResponse> => {
   try {
-    const { data } = await axios.get(`${API_BASE}/products/`);
-    return data;
+    const { data } = await axios.get(`${API_BASE}/products?page=${page}&limit=${limit}`);
+    return data; // ✅ return full response object
   } catch (error) {
     console.error('Error fetching products:', error);
     throw error;

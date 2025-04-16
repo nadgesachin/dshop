@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Star, MapPin, Phone, Mail, Clock, User, MessageSquare, ShoppingBag, Bell, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Mail, User, MessageSquare, ShoppingBag, Bell, X } from 'lucide-react';
 import { submitReview, getReviews, Review, fetchReviews } from '../services/reviewService';
 import { getAllProducts } from '../services/productService';
 import toast from 'react-hot-toast';
@@ -29,6 +29,7 @@ const Home: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingReview, setIsLoadingReview] = useState(false);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,15 +41,28 @@ const Home: React.FC = () => {
   const [reviewsPerPage] = useState(5); // Number of reviews per page
   const [showAllReviewsModal, setShowAllReviewsModal] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
+  const fetchProducts = async (pageNumber: number) => {
+    setIsLoadingProduct(true);
+    try {
+      const res = await getAllProducts(pageNumber, 10); // API must support page & limit
+      setProducts(prev => [...prev, ...res.data]);
+      console.log("Fetched Products:", res.data);
+      setHasMore(pageNumber < res.totalPages); // control further fetching
+    } catch (err) {
+      console.error('Error fetching products', err);
+    } finally {
+      setIsLoadingProduct(false);
+    }
+  };
+  
   useEffect(() => {
-    const fetchProducts = async () => {
-      const products = await getAllProducts();
-      console.log("products", products);
-      setProducts(products);
-    };
-    fetchProducts();
-  }, []);
+    fetchProducts(page); // on initial load + every time page increases
+  }, [page]);
+  
+
 
   const categories = [
     {
@@ -160,30 +174,42 @@ const Home: React.FC = () => {
   };
 
   const settingsProduct = {
-    dots: true,
     infinite: true,
     speed: 600,
-    slidesToShow: 1, // Change this to 1 for smaller screens
+    slidesToShow: 1, 
     slidesToScroll: 1,
     arrows: true,
     autoplay: true,
     autoplaySpeed: 5000,
     pauseOnHover: true,
+    afterChange: (current: number) => {
+        const lastVisibleSlideIndex = current + 1;
+        
+        // Trigger next page load if last visible slide is reached and more products are available
+        if (
+            lastVisibleSlideIndex >= products.length &&
+            !isLoadingProduct && 
+            hasMore
+        ) {
+            setPage((prev) => prev + 1);
+        }
+    },
     responsive: [
-      {
-        breakpoint: 768, // Adjust for tablet and mobile
-        settings: {
-          slidesToShow: 1, // Show 1 product on smaller screens
+        {
+            breakpoint: 768, 
+            settings: {
+                slidesToShow: 1,
+            },
         },
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 2, // Show 2 products on larger screens
+        {
+            breakpoint: 1024,
+            settings: {
+                slidesToShow: 2,
+            },
         },
-      },
     ],
-  };
+};
+
 
   const defaultImage = 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
   const defaultAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
@@ -559,87 +585,123 @@ const Home: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900">Products</h2>
         </div>
+        {!isLoadingProduct ? (
+          <div className="relative overflow-hidden">
+            {reviews.length > 0 ? (
+              <>
+                <Slider ref={productSliderRef} {...settingsProduct}>
+                  {products.map((product) => (
+                    <div key={product._id} className="w-full sm:w-1/2 md:w-1/3 flex-shrink-0 px-4">
+                      <Link
+                        to={`/products/${product._id}`}
+                        className="group block relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white"
+                      >
+                        <div className="aspect-w-1 aspect-h-1 w-full h-64">
+                          <img
+                            src={product.images?.[0].url || defaultImage}
+                            alt={product.name}
+                            className="w-full h-full object-contain bg-white p-2 rounded-t-xl transition duration-300"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = defaultImage;
+                            }}
+                          />
 
-        <div className="relative overflow-hidden">
-          <Slider ref={productSliderRef} {...settingsProduct}>
-            {products.map((product) => (
-              <div key={product._id} className="w-full sm:w-1/2 md:w-1/3 flex-shrink-0 px-4">
-                <Link
-                  to={`/products/${product._id}`}
-                  className="group block relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white"
-                >
-                  <div className="aspect-w-1 aspect-h-1 w-full h-64">
-                    <img
-                      src={product.images?.[0].url || defaultImage}
-                      alt={product.name}
-                      className="w-full h-full object-contain bg-white p-2 rounded-t-xl transition duration-300"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = defaultImage;
-                      }}
-                    />
+                        </div>
+                        <div className="p-6">
+                          {/* Product Name */}
+                          <h3
+                            className="text-lg font-semibold text-gray-900 mb-1 overflow-hidden"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 1,
+                              WebkitBoxOrient: 'vertical',
+                            }}
+                          >
+                            {product.name}
+                          </h3>
 
-                  </div>
-                  <div className="p-6">
-                    {/* Product Name */}
-                    <h3
-                      className="text-lg font-semibold text-gray-900 mb-1 overflow-hidden"
-                      style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 1,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {product.name}
-                    </h3>
+                          {/* Product Description */}
+                          <p
+                            className="text-sm text-gray-600 mb-3 overflow-hidden"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                            }}
+                          >
+                            {product.description}
+                          </p>
 
-                    {/* Product Description */}
-                    <p
-                      className="text-sm text-gray-600 mb-3 overflow-hidden"
-                      style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {product.description}
-                    </p>
-
-                    {/* Price and Reviews */}
-                    <p className="text-xl font-bold text-orange-500 mb-3">Rs:{product.price}</p>
-                    <div className="flex items-center">
-                      {/* <div className="flex items-center text-yellow-400">
+                          {/* Price and Reviews */}
+                          <p className="text-xl font-bold text-orange-500 mb-3">Rs:{product.price}</p>
+                          <div className="flex items-center">
+                            {/* <div className="flex items-center text-yellow-400">
                       <Star className="h-4 w-4 fill-current" />
                       <span className="ml-1 text-sm text-gray-600">{product.rating}</span>
                     </div> */}
-                      {/* <span className="mx-2 text-gray-300">|</span> */}
-                      <span className="text-sm text-gray-600">Stock: {product.stock}</span>
+                            {/* <span className="mx-2 text-gray-300">|</span> */}
+                            <span className="text-sm text-gray-600">Stock: {product.stock}</span>
+                          </div>
+                        </div>
+                      </Link>
                     </div>
-                  </div>
-                </Link>
+                  ))}
+                </Slider>
+
+                {/* Arrow Buttons (Centered Vertically on Slider) */}
+                <div className="absolute inset-y-0 left-0 flex items-center z-10">
+                  <button
+                    onClick={prevProductSlide}
+                    className="ml-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-gray-600" />
+                  </button>
+                </div>
+
+                <div className="absolute inset-y-0 right-0 flex items-center z-10">
+                  <button
+                    onClick={nextProductSlide}
+                    className="mr-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
+                  >
+                    <ChevronRight className="h-6 w-6 text-gray-600" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-gray-500">
+                <h3 className="text-lg font-semibold">No reviews found</h3>
               </div>
-            ))}
-          </Slider>
-
-          {/* Arrow Buttons (Centered Vertically on Slider) */}
-          <div className="absolute inset-y-0 left-0 flex items-center z-10">
-            <button
-              onClick={prevProductSlide}
-              className="ml-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
-            >
-              <ChevronLeft className="h-6 w-6 text-gray-600" />
-            </button>
+            )}
           </div>
-
-          <div className="absolute inset-y-0 right-0 flex items-center z-10">
-            <button
-              onClick={nextProductSlide}
-              className="mr-2 p-2 rounded-full bg-white hover:bg-gray-100 transition duration-300 shadow-md"
-            >
-              <ChevronRight className="h-6 w-6 text-gray-600" />
-            </button>
+        ) : (
+          <div className="flex flex-col items-center gap-6 mt-2">
+            <div className="relative w-24 h-24">
+              <svg className="w-full h-full animate-spin-slow -rotate-90" viewBox="0 0 36 36">
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke="rgba(229, 231, 235, 1)"
+                  strokeWidth="4"
+                />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="16"
+                  fill="none"
+                  stroke="rgba(249, 115, 22, 1)"
+                  strokeWidth="4"
+                  strokeDasharray="90"
+                  strokeLinecap="round"
+                  className="animate-dash"
+                />
+              </svg>
+            </div>
+            <p className="text-gray-600 font-medium text-base tracking-wide">Loading... Please wait</p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Customer Reviews Section */}
@@ -654,58 +716,60 @@ const Home: React.FC = () => {
             <>
               {/* Slider */}
               {reviews.length > 0 ? (
-                <Slider {...settings}>
-                  {reviews.map((review) => (
-                    <div key={review._id} className="px-2">
-                      <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
-                        {/* Top Section */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-start space-x-4">
-                            <img
-                              src={review.profilePhoto || defaultAvatar}
-                              alt={`${review.name} profile`}
-                              className="w-10 h-10 rounded-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = defaultAvatar;
-                              }}
-                            />
-                            <div>
-                              <h3 className="text-lg font-semibold">{review.name}</h3>
-                              <p className="text-gray-500 text-sm">
-                                {new Date(review.createdAt).toLocaleDateString()}
-                              </p>
+                <>
+                  <Slider {...settings}>
+                    {reviews.map((review) => (
+                      <div key={review._id} className="px-2">
+                        <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
+                          {/* Top Section */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-start space-x-4">
+                              <img
+                                src={review.profilePhoto || defaultAvatar}
+                                alt={`${review.name} profile`}
+                                className="w-10 h-10 rounded-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = defaultAvatar;
+                                }}
+                              />
+                              <div>
+                                <h3 className="text-lg font-semibold">{review.name}</h3>
+                                <p className="text-gray-500 text-sm">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex mt-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                    }`}
+                                />
+                              ))}
                             </div>
                           </div>
-                          <div className="flex mt-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-5 w-5 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                  }`}
-                              />
-                            ))}
+
+                          {/* Comment Section */}
+                          <div className="text-gray-600 text-md line-clamp-2 sm:line-clamp-4">
+                            {review.comment}
+                          </div>
+
+                          {/* View More Button */}
+                          <div className="pt-3">
+                            <button
+                              onClick={() => handleViewMore(review)}
+                              className="text-sm text-orange-500 hover:underline"
+                            >
+                              View More
+                            </button>
                           </div>
                         </div>
-
-                        {/* Comment Section */}
-                        <div className="text-gray-600 text-md line-clamp-2 sm:line-clamp-4">
-                          {review.comment}
-                        </div>
-
-                        {/* View More Button */}
-                        <div className="pt-3">
-                          <button
-                            onClick={() => handleViewMore(review)}
-                            className="text-sm text-orange-500 hover:underline"
-                          >
-                            View More
-                          </button>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </Slider>
+                    ))}
+                  </Slider>
+                </>
               ) : (
                 <div className="text-center text-gray-500">
                   <h3 className="text-lg font-semibold">No reviews found</h3>
@@ -1180,7 +1244,7 @@ const Home: React.FC = () => {
       {/* Location Section */}
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-5">
             <h2 className="text-2xl font-extrabold text-gray-900">Visit Our Store</h2>
           </div>
 
@@ -1198,66 +1262,6 @@ const Home: React.FC = () => {
 
             </div>
 
-            {/* Contact Information */}
-            <div className="bg-gray-50 rounded-2xl p-8 shadow-xl">
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <MapPin className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Address</h3>
-                    <p className="mt-1 text-gray-600">
-                      Karchond khadkipada dnh&dd Silvassa-396230
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <Phone className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Phone</h3>
-                    <p className="mt-1 text-gray-600">9737485262</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <Mail className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Email</h3>
-                    <p className="mt-1 text-gray-600">shivmobile780@gmail.com</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <Clock className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Business Hours</h3>
-                    <p className="mt-1 text-gray-600">
-                      Monday - Saturday: 10:00 AM - 8:00 PM<br />
-                      Sunday: 11:00 AM - 6:00 PM
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <a
-                  href="https://maps.app.goo.gl/B7YkiDgia7Kiqvxk9"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 transition duration-300"
-                >
-                  Get Directions
-                </a>
-              </div>
-            </div>
           </div>
         </div>
       </div>
