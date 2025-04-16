@@ -570,25 +570,50 @@ const Home: React.FC = () => {
                 >
                   <div className="aspect-w-1 aspect-h-1 w-full h-64">
                     <img
-                      src={product.image || defaultImage}
+                      src={product.images?.[0].url || defaultImage}
                       alt={product.name}
-                      className="w-full h-full object-cover transform group-hover:scale-105 transition duration-300"
+                      className="w-full h-full object-contain bg-white p-2 rounded-t-xl transition duration-300"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = defaultImage;
                       }}
                     />
+
                   </div>
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-                    <p className="text-xl font-bold text-orange-500 mb-3">{product.price}</p>
+                    {/* Product Name */}
+                    <h3
+                      className="text-lg font-semibold text-gray-900 mb-1 overflow-hidden"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {product.name}
+                    </h3>
+
+                    {/* Product Description */}
+                    <p
+                      className="text-sm text-gray-600 mb-3 overflow-hidden"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {product.description}
+                    </p>
+
+                    {/* Price and Reviews */}
+                    <p className="text-xl font-bold text-orange-500 mb-3">Rs:{product.price}</p>
                     <div className="flex items-center">
-                      <div className="flex items-center text-yellow-400">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="ml-1 text-sm text-gray-600">{product.rating}</span>
-                      </div>
-                      <span className="mx-2 text-gray-300">|</span>
-                      <span className="text-sm text-gray-600">{product.reviews} reviews</span>
+                      {/* <div className="flex items-center text-yellow-400">
+                      <Star className="h-4 w-4 fill-current" />
+                      <span className="ml-1 text-sm text-gray-600">{product.rating}</span>
+                    </div> */}
+                      {/* <span className="mx-2 text-gray-300">|</span> */}
+                      <span className="text-sm text-gray-600">Stock: {product.stock}</span>
                     </div>
                   </div>
                 </Link>
