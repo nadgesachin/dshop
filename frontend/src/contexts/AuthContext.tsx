@@ -4,6 +4,7 @@ import { config } from '../config';
 interface AuthContextType {
   isAuthenticated: boolean;
   authInitialized: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<string>;
   logout: () => void;
   setIsAuthenticatedMethod: (isAuthenticated: boolean) => void;
@@ -14,9 +15,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const admin = localStorage.getItem('admin');
+    console.log("admin",admin);
+    if(admin === 'admin'){
+      setIsAdmin(true);
+    }
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setIsAuthenticated(true);
@@ -30,7 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password
       });
-
       const { token, role } = response.data;
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -38,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("response.data: ",response.data);
       if(role && role === 'admin'){
         localStorage.setItem('admin', 'admin');
+        setIsAdmin(true);
       }
       return token;
     } catch (error) {
@@ -53,13 +60,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('admin');
     delete axios.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
+    setIsAdmin(false);
   };
 
   const setIsAuthenticatedMethod = (flag: boolean) => {
     setIsAuthenticated(flag);
   }
   return (
-    <AuthContext.Provider value={{ isAuthenticated, authInitialized, login, logout, setIsAuthenticatedMethod }}>
+    <AuthContext.Provider value={{ isAuthenticated, authInitialized, login, logout, setIsAuthenticatedMethod, isAdmin }}>
       {children}
     </AuthContext.Provider>
 

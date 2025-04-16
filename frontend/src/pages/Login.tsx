@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,19 +9,28 @@ export const Login = () => {
   const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { email, password } = formData;
+      const token = await login(email, password);
+      if (token) {
+        toast.success('Login successful!');
+        const from = '/';
+        navigate(from);
+      } else {
+        toast.error('Invalid credentials. Please try again.');
+      }
+    } catch (error:any) {
+      toast.error(error);
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
 
-    const { email, password } = formData;
-    const token = await login(email, password);
-    if (token) {
-      toast.success('Login successful!');
-      const from = '/';
-      navigate(from);
-    } else {
-      toast.error('Invalid credentials. Please try again.');
     }
   };
 
@@ -105,6 +114,47 @@ export const Login = () => {
           </p>
         </form>
       </div>
+      {isLoading && (
+        <div className="fixed inset-0 z-[99999] bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-10 w-full max-w-sm relative animate-fade-in">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsLoading(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Loader Visual */}
+            <div className="flex flex-col items-center gap-6 mt-2">
+              <div className="relative w-24 h-24">
+                <svg className="w-full h-full animate-spin-slow -rotate-90" viewBox="0 0 36 36">
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="rgba(229, 231, 235, 1)"  // Tailwind gray-200
+                    strokeWidth="4"
+                  />
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="16"
+                    fill="none"
+                    stroke="rgba(249, 115, 22, 1)"  // Tailwind orange-500
+                    strokeWidth="4"
+                    strokeDasharray="90"
+                    strokeLinecap="round"
+                    className="animate-dash"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-600 font-medium text-base tracking-wide">Loading... Please wait</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

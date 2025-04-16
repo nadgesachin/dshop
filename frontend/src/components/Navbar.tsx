@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,7 +10,7 @@ const Navbar = () => {
   
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, isAdmin } = useAuth();
   
   const navItems = [
     { name: 'Home', path: '/' },
@@ -18,15 +18,7 @@ const Navbar = () => {
     { name: 'Reviews', path: '/reviews' },
     { name: 'Contact', path: '/contact' },
   ];
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  useEffect(()=>{
-    const admin = localStorage.getItem('admin');
-    console.log("admin",admin);
-    if(admin === 'admin'){
-      setIsAdmin(true);
-    }
-  },[])
+
   const handleLogout = () => {
     logout();
     toast.success('Logged out successfully');

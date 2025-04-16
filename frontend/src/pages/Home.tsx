@@ -36,18 +36,10 @@ const Home: React.FC = () => {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [photosUrl, setPhotosUrl] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [reviewsPerPage] = useState(5); // Number of reviews per page
   const [showAllReviewsModal, setShowAllReviewsModal] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
-
-  const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(() => {
-    const admin = localStorage.getItem('admin');
-    if (admin === 'admin') {
-      setIsAdmin(true);
-    }
-  }, [])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -697,7 +689,7 @@ const Home: React.FC = () => {
 
               {/* View All Reviews Button */}
               {reviews.length > 0 && (
-                <div className="text-center mt-6">
+                <div className="text-center mt-10">
                   <button
                     onClick={handleViewAllReviews}
                     className="inline-block px-6 py-3 text-white bg-orange-500 hover:bg-orange-600 rounded-full text-base font-semibold transition"
