@@ -615,7 +615,7 @@ const Home: React.FC = () => {
           {/* Slider */}
           <Slider ref={sliderRef} {...settingsProduct}>
             {categories.map((category) => (
-              <div key={category.name} className="w-full h-[333px] tm-2px">
+              <div key={category.name} className="w-full h-[333px] md:h-[420px] lg:h-[550px] tm-2px">
                 <div className="relative w-full h-full overflow-hidden shadow-lg">
                   <img
                     src={category.image}
@@ -642,8 +642,8 @@ const Home: React.FC = () => {
 
       {/* Featured Products Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900">Products</h2>
+        <div className="flex items-center justify-center mb-8">
+          <h2 className="text-4xl font-extrabold center text-gray-900">Products</h2>
         </div>
         {!isLoadingProduct ? (
           <div className="relative overflow-hidden">
@@ -730,7 +730,7 @@ const Home: React.FC = () => {
               </>
             ) : (
               <div className="text-center text-gray-500">
-                <h3 className="text-lg font-semibold">No reviews found</h3>
+                <h3 className="text-lg font-semibold">No products found</h3>
               </div>
             )}
           </div>
@@ -769,7 +769,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="text-center mb-10">
             <h2 className="text-4xl font-extrabold text-gray-900">What Our Customers Say</h2>
-            <p className="mt-4 text-lg text-gray-600">Real feedback from our happy customers</p>
+            {/* <p className="mt-4 text-lg text-gray-600">Real feedback from our happy customers</p> */}
           </div>
 
           {!isLoadingReview ? (
