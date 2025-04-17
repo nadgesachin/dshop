@@ -134,15 +134,6 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Validate category
-    const allowedCategories = ['CCTV Cameras', 'Computer CPUs', 'Monitors and parts', 'Speakers', 'Printers'];
-    if (category && !allowedCategories.includes(category)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid category. Allowed: ${allowedCategories.join(', ')}`
-      });
-    }
-
     // Parse specifications
     let parsedSpecifications = specifications ? String(specifications) : '';
 
