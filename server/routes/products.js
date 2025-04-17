@@ -77,10 +77,10 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     }
 
     // Validate category
-    const allowedCategories = ['CCTV Cameras', 'Computer CPUs', 'Monitors and parts', 'Speakers', 'Printers'];
-    if (!allowedCategories.includes(category)) {
-      return res.status(400).json({ success: false, message: `Invalid category. Allowed: ${allowedCategories.join(', ')}` });
-    }
+    // const allowedCategories = ['CCTV Cameras', 'Computer CPUs', 'Monitors and parts', 'Speakers', 'Printers'];
+    // if (!allowedCategories.includes(category)) {
+    //   return res.status(400).json({ success: false, message: `Invalid category. Allowed: ${allowedCategories.join(', ')}` });
+    // }
 
     // Upload images and build image object array
     const images = [];
