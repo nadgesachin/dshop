@@ -1393,11 +1393,11 @@ const Home: React.FC = () => {
       {
         !isAuthenticated && (
           <>
-            <div className="fixed bottom-6 right-6 flex flex-col items-end gap-4 z-[99999]">
+            <div className="fixed bottom-3 right-3 flex flex-col items-end gap-4 z-[99999]">
               {/* Newsletter Button */}
               <button
                 onClick={() => setShowNewsletterModal(true)}
-                className="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
                 aria-label="Subscribe to newsletter"
               >
                 <Bell className="h-8 w-8" />
@@ -1408,7 +1408,7 @@ const Home: React.FC = () => {
                 onClick={() => {
                   setShowMapModal(true)
                 }}
-                className="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
+                className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
                 aria-label="Open location"
               >
                 <MapPin className="h-8 w-8" />
