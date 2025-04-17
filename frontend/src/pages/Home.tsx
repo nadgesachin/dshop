@@ -48,11 +48,7 @@ const Home: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [showProductModal, setShowProductModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [categoryList, setCategoryList] = useState<string[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   // const [reviewForm, setReviewForm] = useState({
   //   product: '',
   // });
@@ -234,7 +230,7 @@ const Home: React.FC = () => {
       },
     ],
   };
-  
+
   const homeSettings = {
     infinite: true,
     speed: 500,
@@ -502,17 +498,6 @@ const Home: React.FC = () => {
     }
   };
 
-
-  // useEffect(() => {
-  //   const timer = setInterval(nextSlide, 5000);
-  //   return () => clearInterval(timer);
-  // }, []);
-
-  // useEffect(() => {
-  //   const productTimer = setInterval(nextProductSlide, 4000);
-  //   return () => clearInterval(productTimer);
-  // }, []);
-
   useEffect(() => {
     if (showAllReviewsModal) {
       document.body.style.overflow = 'hidden';
@@ -567,16 +552,38 @@ const Home: React.FC = () => {
   }
 
   const fetchProductsByCategory = async (category: string) => {
+    console.log("-------------------");
     const res = await getAllProducts(1, 50, category);
     return res.data;
   };
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredCategoriess, setFilteredCategories] = useState<string[]>([]);
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [filteredProductList, setFilteredProductList] = useState<Product[]>([]);
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+
+  useEffect(() => {
+    const filtered = productList.filter(product =>
+      product?.name.toLowerCase().includes(productSearchTerm.toLowerCase())
+    );
+    setFilteredProductList(filtered);
+  }, [productSearchTerm, productList]);
+
+  useEffect(() => {
+    // Filter products based on searchTerm
+    const results = categoryList.filter(cat =>
+      cat.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredCategories(results);
+  }, [searchTerm, categoryList]);
 
   return (
     <div className="bg-white ">
       {/* Hero Section with Carousel */}
       {/* <div className="relative"> */}
-        {/* Welcome Section */}
-        {/* <div className="absolute top-0 left-0 right-0 z-10 bg-black/50">
+      {/* Welcome Section */}
+      {/* <div className="absolute top-0 left-0 right-0 z-10 bg-black/50">
           <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
               Welcome to Shiv Mobile
@@ -595,32 +602,36 @@ const Home: React.FC = () => {
           </div>
         </div> */}
 
-        <div className="relative">
-          {/* Left Button */}
-          <button
-            onClick={() => sliderRef.current?.slickPrev()}
-            className="absolute z-10 left-2 top-[92%] -translate-y-1/2 bg-white text-gray-700 hover:bg-gray-100 shadow-md p-2 rounded-full"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
+      <div className="relative w-full overflow-hidden">
+        {/* Left Button */}
+        <button
+          onClick={() => sliderRef.current?.slickPrev()}
+          className="absolute z-10 left-2 bottom-4 bg-white text-gray-700 hover:bg-gray-100 shadow-md p-2 rounded-full"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-          {/* Right Button */}
-          <button
-            onClick={() => sliderRef.current?.slickNext()}
-            className="absolute z-10 right-2 top-[92%] -translate-y-1/2 bg-white text-gray-700 hover:bg-gray-100 shadow-md p-2 rounded-full"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+        {/* Right Button */}
+        <button
+          onClick={() => sliderRef.current?.slickNext()}
+          className="absolute z-10 right-2 bottom-4 bg-white text-gray-700 hover:bg-gray-100 shadow-md p-2 rounded-full"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
 
-          {/* Slider */}
-          <Slider ref={sliderRef} {...settingsProduct}>
+        {/* Slider */}
+        <div className="overflow-hidden w-full">
+          <Slider ref={sliderRef} {...homeSettings}>
             {categories.map((category) => (
-              <div key={category.name} className="w-full h-[333px] md:h-[420px] lg:h-[550px] tm-2px">
-                <div className="relative w-full h-full overflow-hidden shadow-lg">
+              <div
+                key={category.name}
+                className="w-full px-1" // no min-w or flex-shrink
+              >
+                <div className="relative h-[333px] md:h-[420px] lg:h-[550px] overflow-hidden shadow-lg">
                   <img
                     src={category.image}
                     alt={category.name}
-                    className="w-full h-full object-fit bg-white  transition duration-300"
+                    className="w-full h-full object-fit"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-12 text-white">
@@ -637,6 +648,7 @@ const Home: React.FC = () => {
             ))}
           </Slider>
         </div>
+      </div>
 
       {/* </div> */}
 
@@ -649,7 +661,7 @@ const Home: React.FC = () => {
           <div className="relative overflow-hidden">
             {reviews.length > 0 ? (
               <>
-                <Slider ref={productSliderRef} {...homeSettings}>
+                <Slider ref={productSliderRef} {...settingsProduct}>
                   {products.map((product) => (
                     <div key={product._id} className="w-full sm:w-1/2 md:w-1/3 flex-shrink-0 px-4">
                       <Link
@@ -1045,97 +1057,119 @@ const Home: React.FC = () => {
                     }
 
                     {/* Product */}
-                    <div>
+                    <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Product Purchased</label>
                       <div className="relative">
                         <ShoppingBag className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
                         <button
                           type="button"
                           onClick={() => {
-                            setShowProductModal(true);
+                            setShowProductModal(!showProductModal);
                             fetchCategories();
                           }}
                           className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-left text-sm bg-white text-gray-700"
                         >
                           {reviewForm.product || 'Select a product'}
                         </button>
+
+                        {showProductModal && (
+                          <div className="absolute top-full left-0 mt-1 w-full border border-gray-300 rounded-lg shadow-lg bg-white z-50">
+                            <div className="p-4 text-sm text-gray-700 space-y-2">
+                              <div className="flex gap-2 items-center">
+                                <input
+                                  type="text"
+                                  placeholder="Search product..."
+                                  value={searchTerm} // ✅ should match the state you're updating
+                                  onChange={(e) => setSearchTerm(e.target.value)}
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none"
+                                />
+
+                                <button
+                                  onClick={() => {
+                                    setReviewForm({ ...reviewForm, product: '' });
+                                    setShowProductModal(false);
+                                  }}
+                                  className="text-xs text-red-500 hover:underline border border-red-300 py-1 px-1 rounded"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+
+                              <ul className="max-h-40 overflow-y-auto">
+                                {filteredCategoriess.length === 0 ? (
+                                  <li className="py-1 text-gray-400">No category found</li>
+                                ) : (
+                                  filteredCategoriess.map((cat, index) => (
+                                    <li
+                                      key={index}
+                                      className="py-1 cursor-pointer hover:bg-gray-100 px-2 rounded"
+                                      onClick={async () => {
+                                        setSearchTerm('');
+                                        const res = await fetchProductsByCategory(cat); // API call
+                                        setProductList(res);
+                                        setShowProductModal(false);
+                                      }}
+                                    >
+                                      {cat}
+                                    </li>
+                                  ))
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                        {productList.length > 0 && (
+                          <div className="absolute top-full left-0 mt-1 w-full border border-gray-300 rounded-lg shadow-lg bg-white z-50">
+                            <div className="p-4 text-sm text-gray-700 space-y-2">
+                              {/* Search Bar for Products */}
+                              <div className="flex gap-2 items-center mb-2">
+                                <input
+                                  type="text"
+                                  placeholder="Search products..."
+                                  value={productSearchTerm}
+                                  onChange={(e) => setProductSearchTerm(e.target.value)}
+                                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none"
+                                />
+                                <button
+                                  onClick={() => {
+                                    setProductSearchTerm('');
+                                    setReviewForm({ ...reviewForm, product: '' });
+                                  }}
+                                  className="text-xs text-red-500 hover:underline border border-red-300 py-1 px-1 rounded"
+                                >
+                                  Clear
+                                </button>
+                              </div>
+
+                              {/* Product List */}
+                              <ul className="max-h-40 overflow-y-auto">
+                                {filteredProductList.length === 0 ? (
+                                  <li className="py-1 text-gray-400">No product found</li>
+                                ) : (
+                                  filteredProductList.map((product, index) => (
+                                    <li
+                                      key={index}
+                                      className="py-1 cursor-pointer hover:bg-gray-100 px-2 rounded border border-gray-300"
+                                      onClick={() => {
+                                        setReviewForm({ ...reviewForm, product: product.name });
+                                        setShowProductModal(false);
+                                        setProductSearchTerm('');
+                                        setFilteredProductList([]);
+                                        setProductList([]);
+                                      }}
+                                    >
+                                      <span className="truncate w-full block">{product.name}</span>
+                                    </li>
+                                  ))
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+
+
                       </div>
                     </div>
-                    {showProductModal && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-
-                          <h2 className="text-lg font-semibold mb-4">Select Product</h2>
-
-                          {/* Category Dropdown */}
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Select Category</label>
-                          <select
-                            value={selectedCategory}
-                            onChange={async (e) => {
-                              const cat = e.target.value;
-                              setSelectedCategory(cat);
-                              setSearchQuery('');
-                              const res = await fetchProductsByCategory(cat); // hit your API here
-                              setAllProducts(res);
-                              setFilteredProducts(res);
-                            }}
-                            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                          >
-                            <option value="">-- Choose Category --</option>
-                            {categoryList.map((cat, i) => (
-                              <option key={i} value={cat}>{cat}</option>
-                            ))}
-                          </select>
-
-                          {/* Product Search */}
-                          {allProducts.length > 0 && (
-                            <input
-                              type="text"
-                              placeholder="Search product..."
-                              value={searchQuery}
-                              onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                const query = e.target.value.toLowerCase();
-                                const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query));
-                                setFilteredProducts(filtered);
-                              }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-4"
-                            />
-                          )}
-
-                          {/* Product List */}
-                          <div className="grid gap-3">
-                            {filteredProducts.map((product) => (
-                              <button
-                                key={product._id}
-                                onClick={() => {
-                                  setReviewForm({ ...reviewForm, product: product.name });
-                                  setShowProductModal(false);
-                                }}
-                                className="flex items-center border p-3 rounded-lg hover:bg-orange-50 text-left"
-                              >
-                                <img
-                                  src={product.images?.[0]?.url || defaultImage}
-                                  alt={product.name}
-                                  className="h-10 w-10 rounded mr-3 object-cover border"
-                                />
-                                <span className="text-sm text-gray-700">{product.name}</span>
-                              </button>
-                            ))}
-                            {filteredProducts.length === 0 && selectedCategory && (
-                              <p className="text-sm text-gray-500">No products found in this category.</p>
-                            )}
-                          </div>
-
-                          <button
-                            onClick={() => setShowProductModal(false)}
-                            className="mt-6 w-full bg-gray-100 text-gray-700 py-2 rounded hover:bg-gray-200 text-sm"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
                     {/* Rating */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Your Rating</label>
