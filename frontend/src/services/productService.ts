@@ -36,11 +36,16 @@ export interface Product {
 // GET all products
 export const getAllProducts = async (
   page = 1,
-  limit = 10
+  limit = 10,
+  category?: string,
 ): Promise<ProductListResponse> => {
   try {
-    const { data } = await axios.get(`${API_BASE}/products?page=${page}&limit=${limit}`);
-    return data; // ✅ return full response object
+    const params: any = { page, limit };
+
+    if (category) params.category = category;
+
+    const { data } = await axios.get(`${API_BASE}/products`, { params });
+    return data;
   } catch (error) {
     console.error('Error fetching products:', error);
     throw error;

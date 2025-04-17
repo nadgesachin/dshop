@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Star, Mail, User, MessageSquare, ShoppingBag, Bell, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Mail, User, MessageSquare, ShoppingBag, Bell, X, MapPin } from 'lucide-react';
 import { submitReview, getReviews, Review, fetchReviews } from '../services/reviewService';
+import { getAllCategories } from '../services/categoryService';
 import { getAllProducts } from '../services/productService';
 import toast from 'react-hot-toast';
 import Slider from 'react-slick';
@@ -11,9 +12,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { getUser } from '@/services/signupService';
 import { uploadImage } from '@/services/upload';
 import { saveSubcriber } from '../services/subscribeService';
+import { Product } from './Products';
 
 const Home: React.FC = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // const [currentSlide, setCurrentSlide] = useState(0);
+  const sliderRef = useRef<Slider | null>(null);
   const [selectedReview, setSelectedReview] = useState<any>(null);
   const handleViewMore = (review: any) => setSelectedReview(review);
   const closeModal = () => setSelectedReview(null);
@@ -31,6 +34,7 @@ const Home: React.FC = () => {
   const [isLoadingReview, setIsLoadingReview] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -43,6 +47,16 @@ const Home: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  // const [reviewForm, setReviewForm] = useState({
+  //   product: '',
+  // });
+
 
   const fetchProducts = async (pageNumber: number) => {
     setIsLoadingProduct(true);
@@ -57,49 +71,60 @@ const Home: React.FC = () => {
       setIsLoadingProduct(false);
     }
   };
-  
+
   useEffect(() => {
     fetchProducts(page); // on initial load + every time page increases
   }, [page]);
-  
 
 
   const categories = [
     {
-      name: 'Smartphones',
-      image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      description: 'Latest smartphones from top brands',
+      name: 'CCTV Cameras',
+      image: 'https://i.imghippo.com/files/WVvP9188Qyc.jpg',
+      description: '4K Camera Systems with Night Vision Advanced Feature',
       count: '50+ Products'
     },
     {
-      name: 'Laptops',
-      image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      description: 'Powerful laptops for work and gaming',
-      count: '30+ Products'
-    },
-    {
-      name: 'Accessories',
-      image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      description: 'Essential accessories for your devices',
+      name: 'Desktop Monitor ',
+      image: 'https://i.imghippo.com/files/PNN7607Sog.jpg',
+      description: 'Best Quality for Desktop Monitor All Brands Available',
       count: '100+ Products'
     },
     {
-      name: 'Audio',
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      description: 'Premium audio equipment',
+      name: 'Desktop Monitor ',
+      image: 'https://i.imghippo.com/files/DUaY2387bc.webp',
+      description: 'Best Quality for Desktop Monitor All Brands Available',
+      count: '100+ Products'
+    },
+    {
+      name: 'Smart Mobile',
+      image: 'https://i.imghippo.com/files/UuF3960qII.jpg',
+      description: 'All Type Smart Mobile Phones Available with Best Price',
       count: '40+ Products'
     },
     {
-      name: 'Smart Home',
-      image: 'https://images.unsplash.com/photo-1558002038-1055e3fdf0ad?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      description: 'Smart home devices and solutions',
+      name: 'Smart Mobile',
+      image: 'https://i.imghippo.com/files/Hvye9210la.webp',
+      description: 'All Type Smart Mobile Phones Available with Best Price',
+      count: '40+ Products'
+    },
+    {
+      name: 'Smart Mobile',
+      image: 'https://i.imghippo.com/files/rMkJ9021FD.jpg',
+      description: 'All Type Smart Mobile Phones Available with Best Price',
+      count: '40+ Products'
+    },
+    {
+      name: 'Blutooth Speakars',
+      image: 'https://i.imghippo.com/files/WDB6563FTo.jpg',
+      description: 'Smart home Office Blutooth Speakars Advanced High Voice Volume ',
       count: '25+ Products'
     },
     {
-      name: 'Gaming',
-      image: 'https://images.unsplash.com/photo-1542903660-eedba2cda473?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      description: 'Gaming gear and accessories',
-      count: '35+ Products'
+      name: 'CCTV Cameras',
+      image: 'https://i.imghippo.com/files/KSO8294KLE.jpg',
+      description: '',
+      count: '50+ Products'
     }
   ];
 
@@ -176,60 +201,83 @@ const Home: React.FC = () => {
   const settingsProduct = {
     infinite: true,
     speed: 600,
-    slidesToShow: 1, 
+    slidesToShow: 1,
     slidesToScroll: 1,
     arrows: true,
     autoplay: true,
     autoplaySpeed: 5000,
     pauseOnHover: true,
     afterChange: (current: number) => {
-        const lastVisibleSlideIndex = current + 1;
-        
-        // Trigger next page load if last visible slide is reached and more products are available
-        if (
-            lastVisibleSlideIndex >= products.length &&
-            !isLoadingProduct && 
-            hasMore
-        ) {
-            setPage((prev) => prev + 1);
-        }
+      const lastVisibleSlideIndex = current + 1;
+
+      // Trigger next page load if last visible slide is reached and more products are available
+      if (
+        lastVisibleSlideIndex >= products.length &&
+        !isLoadingProduct &&
+        hasMore
+      ) {
+        setPage((prev) => prev + 1);
+      }
     },
     responsive: [
-        {
-            breakpoint: 768, 
-            settings: {
-                slidesToShow: 1,
-            },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
         },
-        {
-            breakpoint: 1024,
-            settings: {
-                slidesToShow: 2,
-            },
+      },
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
         },
+      },
     ],
-};
+  };
+  
+  const homeSettings = {
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: true,
+    autoplay: true,
+    autoplaySpeed: 5000,
+    pauseOnHover: true,
+    afterChange: (current: number) => {
+      const lastVisibleSlideIndex = current + 1;
+
+      if (
+        lastVisibleSlideIndex >= products.length &&
+        !isLoadingProduct &&
+        hasMore
+      ) {
+        setPage((prev) => prev + 1);
+      }
+    },
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
+        },
+      },
+    ],
+  };
 
 
   const defaultImage = 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
   const defaultAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
 
-  const mockProducts = [
-    { id: '1', name: 'iPhone 14 Pro Max' },
-    { id: '2', name: 'MacBook Pro M2' },
-    { id: '3', name: 'Samsung Galaxy S23 Ultra' },
-    { id: '4', name: 'Sony WH-1000XM5' },
-    { id: '5', name: 'Apple Watch Series 8' },
-    { id: '6', name: 'iPad Pro M2' }
-  ];
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % categories.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + categories.length) % categories.length);
-  };
+  // const nextSlide = () => {
+  //   setCurrentSlide((prev) => (prev + 1) % categories.length);
+  // };
 
   const productSliderRef = useRef<Slider | null>(null);
 
@@ -455,17 +503,15 @@ const Home: React.FC = () => {
   };
 
 
+  // useEffect(() => {
+  //   const timer = setInterval(nextSlide, 5000);
+  //   return () => clearInterval(timer);
+  // }, []);
 
-
-  useEffect(() => {
-    const timer = setInterval(nextSlide, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const productTimer = setInterval(nextProductSlide, 4000);
-    return () => clearInterval(productTimer);
-  }, []);
+  // useEffect(() => {
+  //   const productTimer = setInterval(nextProductSlide, 4000);
+  //   return () => clearInterval(productTimer);
+  // }, []);
 
   useEffect(() => {
     if (showAllReviewsModal) {
@@ -480,6 +526,30 @@ const Home: React.FC = () => {
   }, [showAllReviewsModal]);
 
   useEffect(() => {
+    if (showMapModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showMapModal]);
+
+  useEffect(() => {
+    if (showNewsletterModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showNewsletterModal]);
+
+  useEffect(() => {
     if (selectedReview) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -491,13 +561,22 @@ const Home: React.FC = () => {
     };
   }, [selectedReview]);
 
+  async function fetchCategories() {
+    const res = await getAllCategories();
+    setCategoryList(res.data.data.map((cat: any) => cat.name));
+  }
+
+  const fetchProductsByCategory = async (category: string) => {
+    const res = await getAllProducts(1, 50, category);
+    return res.data;
+  };
 
   return (
     <div className="bg-white ">
       {/* Hero Section with Carousel */}
-      <div className="relative">
+      {/* <div className="relative"> */}
         {/* Welcome Section */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-black/50">
+        {/* <div className="absolute top-0 left-0 right-0 z-10 bg-black/50">
           <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
               Welcome to Shiv Mobile
@@ -514,71 +593,52 @@ const Home: React.FC = () => {
               </Link>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        {/* Carousel */}
-        <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden">
-          <div className="absolute inset-0">
-            <div
-              className="flex h-full transition-transform duration-500 ease-in-out flex-nowrap"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {categories.map((category) => (
-                <div
-                  key={category.name}
-                  className="min-w-full flex-shrink-0 h-full"
-                >
-                  <div className="relative h-full">
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-12 text-white">
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
-                        {category.name}
-                      </h2>
-                      <p className="text-sm sm:text-base md:text-lg opacity-90 mb-2 truncate sm:whitespace-normal sm:overflow-visible sm:text-ellipsis">
-                        {category.description}
-                      </p>
-                      <p className="text-sm sm:text-base font-medium">
-                        {category.count}
-                      </p>
-                    </div>
+        <div className="relative">
+          {/* Left Button */}
+          <button
+            onClick={() => sliderRef.current?.slickPrev()}
+            className="absolute z-10 left-2 top-[92%] -translate-y-1/2 bg-white text-gray-700 hover:bg-gray-100 shadow-md p-2 rounded-full"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+
+          {/* Right Button */}
+          <button
+            onClick={() => sliderRef.current?.slickNext()}
+            className="absolute z-10 right-2 top-[92%] -translate-y-1/2 bg-white text-gray-700 hover:bg-gray-100 shadow-md p-2 rounded-full"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Slider */}
+          <Slider ref={sliderRef} {...settingsProduct}>
+            {categories.map((category) => (
+              <div key={category.name} className="w-full h-[333px] tm-2px">
+                <div className="relative w-full h-full overflow-hidden shadow-lg">
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-full h-full object-fit bg-white  transition duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-12 text-white">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1">
+                      {category.name}
+                    </h2>
+                    <p className="text-sm sm:text-base md:text-lg opacity-90 mb-1 truncate sm:whitespace-normal sm:overflow-visible sm:text-ellipsis">
+                      {category.description}
+                    </p>
+                    <p className="text-sm sm:text-base font-medium">{category.count}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-            <button
-              onClick={prevSlide}
-              className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition duration-300"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <div className="flex space-x-2">
-              {categories.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-2 h-2 rounded-full transition duration-300 ${index === currentSlide ? 'bg-orange-500 w-4' : 'bg-white/50'
-                    }`}
-                />
-              ))}
-            </div>
-            <button
-              onClick={nextSlide}
-              className="p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition duration-300"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          </div>
+              </div>
+            ))}
+          </Slider>
         </div>
-      </div>
+
+      {/* </div> */}
 
       {/* Featured Products Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -589,7 +649,7 @@ const Home: React.FC = () => {
           <div className="relative overflow-hidden">
             {reviews.length > 0 ? (
               <>
-                <Slider ref={productSliderRef} {...settingsProduct}>
+                <Slider ref={productSliderRef} {...homeSettings}>
                   {products.map((product) => (
                     <div key={product._id} className="w-full sm:w-1/2 md:w-1/3 flex-shrink-0 px-4">
                       <Link
@@ -906,7 +966,7 @@ const Home: React.FC = () => {
                     <img
                       src={selectedReview.photos[0]}
                       alt="Review Image"
-                      className="rounded-lg w-full object-cover max-h-[300px]"
+                      className="rounded-lg w-full object-contain max-h-[300px]"
                     />
                   </div>
                 )}
@@ -986,29 +1046,96 @@ const Home: React.FC = () => {
 
                     {/* Product */}
                     <div>
-                      <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
-                        Product Purchased
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Product Purchased</label>
                       <div className="relative">
                         <ShoppingBag className="absolute top-2.5 left-3 h-5 w-5 text-gray-400" />
-                        <select
-                          id="product"
-                          name="product"
-                          value={reviewForm.product}
-                          onChange={(e) => setReviewForm({ ...reviewForm, product: e.target.value })}
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                          required
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowProductModal(true);
+                            fetchCategories();
+                          }}
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-left text-sm bg-white text-gray-700"
                         >
-                          <option value="">Select a product</option>
-                          {mockProducts.map((product) => (
-                            <option key={product.id} value={product.name}>
-                              {product.name}
-                            </option>
-                          ))}
-                        </select>
+                          {reviewForm.product || 'Select a product'}
+                        </button>
                       </div>
                     </div>
+                    {showProductModal && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
+                          <h2 className="text-lg font-semibold mb-4">Select Product</h2>
+
+                          {/* Category Dropdown */}
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Select Category</label>
+                          <select
+                            value={selectedCategory}
+                            onChange={async (e) => {
+                              const cat = e.target.value;
+                              setSelectedCategory(cat);
+                              setSearchQuery('');
+                              const res = await fetchProductsByCategory(cat); // hit your API here
+                              setAllProducts(res);
+                              setFilteredProducts(res);
+                            }}
+                            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          >
+                            <option value="">-- Choose Category --</option>
+                            {categoryList.map((cat, i) => (
+                              <option key={i} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+
+                          {/* Product Search */}
+                          {allProducts.length > 0 && (
+                            <input
+                              type="text"
+                              placeholder="Search product..."
+                              value={searchQuery}
+                              onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                const query = e.target.value.toLowerCase();
+                                const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query));
+                                setFilteredProducts(filtered);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-4"
+                            />
+                          )}
+
+                          {/* Product List */}
+                          <div className="grid gap-3">
+                            {filteredProducts.map((product) => (
+                              <button
+                                key={product._id}
+                                onClick={() => {
+                                  setReviewForm({ ...reviewForm, product: product.name });
+                                  setShowProductModal(false);
+                                }}
+                                className="flex items-center border p-3 rounded-lg hover:bg-orange-50 text-left"
+                              >
+                                <img
+                                  src={product.images?.[0]?.url || defaultImage}
+                                  alt={product.name}
+                                  className="h-10 w-10 rounded mr-3 object-cover border"
+                                />
+                                <span className="text-sm text-gray-700">{product.name}</span>
+                              </button>
+                            ))}
+                            {filteredProducts.length === 0 && selectedCategory && (
+                              <p className="text-sm text-gray-500">No products found in this category.</p>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => setShowProductModal(false)}
+                            className="mt-6 w-full bg-gray-100 text-gray-700 py-2 rounded hover:bg-gray-200 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {/* Rating */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Your Rating</label>
@@ -1161,28 +1288,6 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                {/* {
-                  !isAuthenticated && (
-                    <div className="flex items-start mt-4">
-                      <input
-                        type="checkbox"
-                        id="acceptTerms"
-                        checked={reviewForm.acceptedTerms}
-                        onChange={(e) =>
-                          setReviewForm((prev) => ({
-                            ...prev,
-                            acceptedTerms: e.target.checked,
-                          }))
-                        }
-                        className="mt-1 h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-                        required
-                      />
-                      <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">
-                        I accept the terms & conditions to create an account automatically with my review.
-                      </label>
-                    </div>
-                  )
-                } */}
 
                 <div className="mt-10 text-center">
                   <button
@@ -1242,44 +1347,75 @@ const Home: React.FC = () => {
       )}
 
       {/* Location Section */}
-      <div className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-5">
-            <h2 className="text-2xl font-extrabold text-gray-900">Visit Our Store</h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Map Section */}
-            <div className="h-full rounded-2xl overflow-hidden shadow-xl">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3773.5863812635165!2d73.1578649!3d20.1565369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be74969dac99969%3A0x5135a11763ae36b2!2sCSC%20CENTER%20SHIV%20MOBILE%20DUDHANI!5e0!3m2!1sen!2sin!4v1712669849146!5m2!1sen!2sin"
-                className="w-full h-full rounded-2xl"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-
+      {showMapModal && (
+        <div className="fixed inset-0 z-[99999] overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
 
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-14 pb-14 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
+              <div className="absolute top-0 right-0 pt-8 pr-4">
+                <button
+                  type="button"
+                  className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
+                  onClick={() => setShowMapModal(false)}
+                >
+                  <span className="sr-only">Close</span>
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="bg-white py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Map Section */}
+                    <div className="h-full rounded-2xl overflow-hidden shadow-xl">
+                      <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3773.5863812635165!2d73.1578649!3d20.1565369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be74969dac99969%3A0x5135a11763ae36b2!2sCSC%20CENTER%20SHIV%20MOBILE%20DUDHANI!5e0!3m2!1sen!2sin!4v1712669849146!5m2!1sen!2sin"
+                        className="w-full h-full rounded-2xl"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Floating Newsletter Button */}
       {
         !isAuthenticated && (
-          <div className="fixed bottom-6 right-6 z-[99999]">
-            <button
-              onClick={() =>
-                setShowNewsletterModal(true)
-              }
-              className="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
-              aria-label="Subscribe to newsletter"
-            >
-              <Bell className="h-8 w-8" />
-            </button>
-          </div>
+          <>
+            <div className="fixed bottom-6 right-6 flex flex-col items-end gap-4 z-[99999]">
+              {/* Newsletter Button */}
+              <button
+                onClick={() => setShowNewsletterModal(true)}
+                className="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
+                aria-label="Subscribe to newsletter"
+              >
+                <Bell className="h-8 w-8" />
+              </button>
+
+              {/* Location Button */}
+              <button
+                onClick={() => {
+                  setShowMapModal(true)
+                }}
+                className="flex items-center justify-center w-16 h-16 rounded-full bg-orange-500 text-white shadow-lg hover:bg-orange-600 hover:shadow-xl transform hover:scale-110 transition duration-300"
+                aria-label="Open location"
+              >
+                <MapPin className="h-8 w-8" />
+              </button>
+            </div>
+
+          </>
         )
       }
 

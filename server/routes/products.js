@@ -16,12 +16,24 @@ router.get('/', async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;      // default to 50
     const skip = (page - 1) * limit;
 
+    const { category, search } = req.query;
+
+    // Build filter conditions dynamically
+    const filter = {};
+    if (category) {
+      filter.category = category;
+    }
+
+    // Add search functionality
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' }; // Case-insensitive search
+    }
     const [products, total] = await Promise.all([
-      Prod.find()
+      Prod.find(filter)
         .skip(skip)
         .limit(limit)
-        .sort({ createdAt: -1 }), // optional: latest first
-      Prod.countDocuments()
+        .sort({ createdAt: -1 }),
+      Prod.countDocuments(filter)
     ]);
 
     res.status(200).json({
@@ -39,6 +51,7 @@ router.get('/', async (req, res) => {
     });
   }
 });
+
 
 // GET product by ID
 router.get('/:id', async (req, res) => {
@@ -92,7 +105,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     const parsedSpecifications = specifications ? String(specifications) : '';
 
     // Create product
-    const product = new Product({
+    const product = new Prod({
       name,
       description,
       category,
@@ -116,7 +129,7 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
   try {
     const { name, description, category, price, stock, features, specifications } = req.body;
 
-    const product = await Product.findById(req.params.id);
+    const product = await Prod.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -179,7 +192,7 @@ router.put('/:id', upload.array('images', 5), async (req, res) => {
 // DELETE product
 router.delete('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Prod.findById(req.params.id);
     if (!product)
       return res.status(404).json({ success: false, message: 'Product not found' });
 
