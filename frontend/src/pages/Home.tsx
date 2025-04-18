@@ -76,49 +76,49 @@ const Home: React.FC = () => {
   const categories = [
     {
       name: 'CCTV Cameras',
-      image: 'https://i.imghippo.com/files/WVvP9188Qyc.jpg',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744991991/crsclhenjpkyenbjuqd5.png',
+      description: '4K Camera Systems with Night Vision Advanced Feature',
+      count: '50+ Products'
+    },
+    {
+      name: 'CCTV Cameras',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744991991/hlbjduirhnhdywagpvbn.png',
       description: '4K Camera Systems with Night Vision Advanced Feature',
       count: '50+ Products'
     },
     {
       name: 'Desktop Monitor ',
-      image: 'https://i.imghippo.com/files/PNN7607Sog.jpg',
-      description: 'Best Quality for Desktop Monitor All Brands Available',
-      count: '100+ Products'
-    },
-    {
-      name: 'Desktop Monitor ',
-      image: 'https://i.imghippo.com/files/DUaY2387bc.webp',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744990932/w5fhiizwzqpzuonhoc4c.jpg',
       description: 'Best Quality for Desktop Monitor All Brands Available',
       count: '100+ Products'
     },
     {
       name: 'Smart Mobile',
-      image: 'https://i.imghippo.com/files/UuF3960qII.jpg',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744992290/amg81xs7au0ssywebnhg.png',
       description: 'All Type Smart Mobile Phones Available with Best Price',
       count: '40+ Products'
     },
     {
       name: 'Smart Mobile',
-      image: 'https://i.imghippo.com/files/Hvye9210la.webp',
-      description: 'All Type Smart Mobile Phones Available with Best Price',
-      count: '40+ Products'
-    },
-    {
-      name: 'Smart Mobile',
-      image: 'https://i.imghippo.com/files/rMkJ9021FD.jpg',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744990934/rngn20e89rtrncira4zd.jpg',
       description: 'All Type Smart Mobile Phones Available with Best Price',
       count: '40+ Products'
     },
     {
       name: 'Blutooth Speakars',
-      image: 'https://i.imghippo.com/files/WDB6563FTo.jpg',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744990934/oijqdgei5volp3gbesdt.jpg',
       description: 'Smart home Office Blutooth Speakars Advanced High Voice Volume ',
       count: '25+ Products'
     },
     {
       name: 'CCTV Cameras',
-      image: 'https://i.imghippo.com/files/KSO8294KLE.jpg',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744990935/hoanpbuc7xb1ozdqyv0f.jpg',
+      description: '',
+      count: '50+ Products'
+    },
+    {
+      name: 'CCTV Cameras',
+      image: 'https://res.cloudinary.com/dppoe8r21/image/upload/v1744990933/q6k4farotlpmhhhnqjpp.jpg',
       description: '',
       count: '50+ Products'
     }
