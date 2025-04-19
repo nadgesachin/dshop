@@ -166,28 +166,30 @@ const Products = () => {
           ))}
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {filteredProducts.length === 0 && (
           <p className="text-center text-gray-500 mt-10">Products not found</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <div key={product._id} className="bg-white shadow-lg rounded-lg overflow-hidden">
-                <img src={product?.images[0].url} alt={product.name} className="w-full h-60 object-contain bg-white p-2 rounded-lg" />
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold mt-2 line-clamp-1">
-                    {product.name}
-                  </h3>
-                  <p className="text-gray-600 mt-2 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="mt-2">
-                    <span className="text-xl font-bold">${product.price}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        ) 
+        // : (
+        //   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        //     {filteredProducts.map((product) => (
+        //       <div key={product._id} className="bg-white shadow-lg rounded-lg overflow-hidden">
+        //         <img src={product?.images[0].url} alt={product.name} className="w-full h-60 object-contain bg-white p-2 rounded-lg" />
+        //         <div className="p-4">
+        //           <h3 className="text-xl font-semibold mt-2 line-clamp-1">
+        //             {product.name}
+        //           </h3>
+        //           <p className="text-gray-600 mt-2 line-clamp-2">
+        //             {product.description}
+        //           </p>
+        //           <div className="mt-2">
+        //             <span className="text-xl font-bold">${product.price}</span>
+        //           </div>
+        //         </div>
+        //       </div>
+        //     ))}
+        //   </div>
+        // )
+        }
       </div>
     </div>
   );

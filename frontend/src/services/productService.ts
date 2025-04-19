@@ -36,7 +36,7 @@ export interface Product {
 // GET all products
 export const getAllProducts = async (
   page = 1,
-  limit = 10,
+  limit = 30,
   category?: string,
 ): Promise<ProductListResponse> => {
   try {

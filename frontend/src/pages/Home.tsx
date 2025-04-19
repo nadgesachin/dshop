@@ -792,7 +792,10 @@ const Home: React.FC = () => {
                   <Slider {...settings}>
                     {reviews.map((review) => (
                       <div key={review._id} className="px-2">
-                        <div className="max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between">
+                        <div
+                          onClick={() => handleViewMore(review)}
+                          className="cursor-pointer max-w-3xl mx-auto bg-white rounded-lg p-6 shadow-lg transition duration-300 hover:scale-[1.015] h-[210px] flex flex-col justify-between"
+                        >
                           {/* Top Section */}
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-start space-x-4">
@@ -800,6 +803,7 @@ const Home: React.FC = () => {
                                 src={review.profilePhoto || defaultAvatar}
                                 alt={`${review.name} profile`}
                                 className="w-10 h-10 rounded-full object-cover"
+                                onClick={(e) => e.stopPropagation()}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = defaultAvatar;
@@ -824,23 +828,51 @@ const Home: React.FC = () => {
                           </div>
 
                           {/* Comment Section */}
-                          <div className="text-gray-600 text-md line-clamp-2 sm:line-clamp-4">
-                            {review.comment}
+                          <div style={{ maxWidth: '100%', width: '100%' }}>
+                            <div
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {review.comment}
+                            </div>
                           </div>
 
-                          {/* View More Button */}
-                          <div className="pt-3">
-                            <button
-                              onClick={() => handleViewMore(review)}
-                              className="text-sm text-orange-500 hover:underline"
-                            >
-                              View More
-                            </button>
+                          {/* Photos */}
+                          <div className="mt-4">
+                            {review.photos && review.photos.length > 0 && (
+                              <div className="mt-4 flex gap-2 overflow-x-auto">
+                                {review.photos.slice(0, 4).map((photo, index) => {
+                                  const isLastVisible = index === 3 && review?.photos && review?.photos.length > 4;
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-300"
+                                      onClick={(e) => e.stopPropagation()} // prevent triggering handleViewMore when clicking image
+                                    >
+                                      <img
+                                        src={photo}
+                                        alt={`Review photo ${index + 1}`}
+                                        className="w-full h-full object-contain"
+                                      />
+                                      {isLastVisible && (
+                                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white font-semibold text-sm">
+                                          +{review?.photos && review.photos.length - 4}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
                     ))}
                   </Slider>
+
                 </>
               ) : (
                 <div className="text-center text-gray-500">

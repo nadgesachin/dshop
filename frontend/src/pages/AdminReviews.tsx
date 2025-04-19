@@ -11,6 +11,7 @@ interface Review {
   comment: string;
   photos?: string[];
   createdAt: string;
+  profilePhoto?: string;
 }
 
 const AdminReviews: React.FC = () => {
@@ -179,9 +180,9 @@ const AdminReviews: React.FC = () => {
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
                   <img
-                    src={selectedReview.photos?.[0] || '/default-avatar.png'}
+                    src={selectedReview.profilePhoto || '/default-avatar.png'}
                     alt={selectedReview.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 </div>
                 <div>
@@ -209,7 +210,7 @@ const AdminReviews: React.FC = () => {
                   <img
                     src={selectedReview.photos[0]}
                     alt="Review Photo"
-                    className="rounded-md w-full object-cover max-h-60"
+                    className="rounded-md w-full object-contain max-h-60"
                   />
                 </div>
               )}
