@@ -20,6 +20,7 @@ import UserManager from './pages/AdminUsers';
 import Profile from './pages/Profile';
 import QRCodePage from './pages/QRCode';
 import AdminSubscriber from './pages/AdminSubscriber';
+import UnderConstruction from './pages/Construction';
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -53,6 +54,7 @@ const AppContent: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/reviews" element={<Reviews />} />
+          <Route path="/products/:id" element={<UnderConstruction />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

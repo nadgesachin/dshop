@@ -581,7 +581,6 @@ const Home: React.FC = () => {
   return (
     <div className="bg-white ">
       {/* Hero Section with Carousel */}
-      {/* <div className="relative"> */}
       {/* Welcome Section */}
       {/* <div className="absolute top-0 left-0 right-0 z-10 bg-black/50">
           <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -665,7 +664,7 @@ const Home: React.FC = () => {
                   {products.map((product) => (
                     <div key={product._id} className="w-full sm:w-1/2 md:w-1/3 flex-shrink-0 px-4">
                       <Link
-                        to={`/products/${product._id}`}
+                        to={`/products/:${product._id}`}
                         className="group block relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white"
                       >
                         <div className="aspect-w-1 aspect-h-1 w-full h-64">
